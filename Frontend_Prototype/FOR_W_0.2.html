@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deepfake Audio Detection</title>
+  <style>
+    /* Previous styles remain the same, just adding these new ones */
+    
+    /* Info Page Styles */
+    .info-page {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+    
+    .info-page h2 {
+      color: #4361ee;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #f2f6fc;
+      padding-bottom: 10px;
+    }
+    
+    .info-page p {
+      margin-bottom: 15px;
+      line-height: 1.7;
+    }
+    
+    .info-page ul {
+      margin: 15px 0;
+      padding-left: 20px;
+    }
+    
+    .info-page li {
+      margin-bottom: 8px;
+    }
+    
+    .back-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #4361ee;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: all 0.3s;
+    }
+    
+    .back-btn:hover {
+      background: #3a0ca3;
+    }
+  </style>
+</head>
+<body>
+  <!-- Previous HTML content remains the same until the footer -->
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <h4>SUPPORT</h4>
+        <ul>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('knowledge-base')">Knowledge Base</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('faq')">FAQ</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('privacy-policy')">Privacy Policy</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('terms')">Terms of Service</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>PLATFORM</h4>
+        <ul>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('ai-detection')">AI Detection</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('voice-analysis')">Voice Analysis</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('speech-verification')">Speech Verification</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('use-cases')">Use Cases</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>DEVELOPERS</h4>
+        <ul>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('api-docs')">API Documentation</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('integration-guides')">Integration Guides</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('open-source')">Open Source</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('sdks')">SDKs</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>COMPANY</h4>
+        <ul>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('about-us')">About Us</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('blog')">Blog</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('careers')">Careers</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('contact')">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Info Pages (hidden by default) -->
+  <div id="info-pages" style="display:none;">
+    <!-- About Us Page -->
+    <div id="about-us-page" class="info-page hidden">
+      <h2>About Us</h2>
+      <p>Welcome to Deepfake Audio Detection, a cutting-edge platform dedicated to identifying synthetic audio content with advanced AI technology.</p>
+      
+      <h3>Our Mission</h3>
+      <p>To provide reliable, accessible tools for detecting manipulated audio content and help combat misinformation in digital media.</p>
+      
+      <h3>Our Team</h3>
+      <p>We are a group of AI researchers and engineers, and cybersecurity experts with a vast knowledge in data science committed to developing robust detection solutions.</p>
+      
+      <h3>Technology</h3>
+      <ul>
+        <li>Advanced machine learning models trained on thousands of hours of audio</li>
+        <li>Proprietary algorithms detecting subtle audio artifacts</li>
+        <li>Continuous updates to keep pace with evolving deepfake technology</li>
+      </ul>
+      
+      <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+    </div>
+
+    <!-- FAQ Page -->
+    <div id="faq-page" class="info-page hidden">
+      <h2>Frequently Asked Questions</h2>
+      
+      <h3>How does the detection work?</h3>
+      <p>Our system analyzes audio files for subtle artifacts and inconsistencies that are characteristic of synthetic media.</p>
+      
+      <h3>What audio formats are supported?</h3>
+      <p>We support common formats including MP3, WAV, AAC, and FLAC.</p>
+      
+      <h3>How accurate is the detection?</h3>
+      <p>Our current models achieve 92-96% accuracy depending on audio quality.</p>
+      
+      <h3>Is there a file size limit?</h3>
+      <p>Yes, the maximum file size is 50MB for free accounts.</p>
+      
+      <h3>How long does analysis take?</h3>
+      <p>Typically 15-30 seconds per minute of audio, depending on server load.</p>
+      
+      <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+    </div>
+
+    <!-- Privacy Policy Page -->
+    <div id="privacy-policy-page" class="info-page hidden">
+      <h2>Privacy Policy</h2>
+      <p>Last Updated: MAY 2025</p>
+      
+      <h3>Information We Collect</h3>
+      <p>We collect minimal personal data required to provide our services, including:</p>
+      <ul>
+        <li>Account information (username, email)</li>
+        <li>Uploaded audio files (processed but not stored long-term)</li>
+        <li>Usage data for service improvement</li>
+      </ul>
+      
+      <h3>How We Use Information</h3>
+      <ul>
+        <li>To provide and maintain our service</li>
+        <li>To improve detection algorithms</li>
+        <li>To communicate with users</li>
+      </ul>
+      
+      <h3>Data Security</h3>
+      <p>We implement industry-standard security measures including encryption and access controls.</p>
+      
+      <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+    </div>
+
+    <!-- Add similar divs for other pages (api-docs, careers, contact, etc.) -->
+    <!-- Example for API Documentation -->
+    <div id="api-docs-page" class="info-page hidden">
+      <h2>API Documentation</h2>
+      <p>Integrate our deepfake detection capabilities into your applications.</p>
+      
+      <h3>Endpoints</h3>
+      <pre><code>POST https://api.foranalyst.com/v1/analyze
+Content-Type: multipart/form-data</code></pre>
+      
+      <h3>Authentication</h3>
+      <p>Use your API key in the Authorization header:</p>
+      <pre><code>Authorization: Bearer YOUR_API_KEY</code></pre>
+      
+      <h3>Response Format</h3>
+      <pre><code>{
+  "status": "success",
+  "result": "fake",
+  "confidence": 94.5,
+  "features": {
+    "spectral_analysis": "inconsistent",
+    "voice_patterns": "synthetic"
+  }
+}</code></pre>
+      
+      <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+    </div>
+
+    <!-- Contact Page -->
+    <div id="contact-page" class="info-page hidden">
+      <h2>Contact Us</h2>
+      
+      <h3>Support</h3>
+      <p>Email: support@foranalyst.com<br>
+      Phone: +91 8169156070</p>
+      
+      <h3>Business Inquiries</h3>
+      <p>Email: partnerships@foranalyst.com</p>
+      
+      <h3>Press</h3>
+      <p>Email: press@foranalyst.com</p>
+      
+      <h3>Office Address</h3>
+      <p>Ajeenkya D Y Patil School of Engineering<br>
+      Lohegaon, Pune, 411047<br>
+      INDIA</p>
+      
+      <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+    </div>
+  </div>
+
+  <script>
+    // Add these new functions to handle info pages
+    function showInfoPage(pageId) {
+      // Hide all containers first
+      document.querySelectorAll('.container').forEach(el => el.classList.add('hidden'));
+      document.getElementById('info-pages').style.display = 'block';
+      
+      // Hide all info pages
+      document.querySelectorAll('.info-page').forEach(el => el.classList.add('hidden'));
+      
+      // Show the requested page
+      document.getElementById(`${pageId}-page`).classList.remove('hidden');
+      
+      // Scroll to top
+      window.scrollTo(0, 0);
+    }
+
+    function hideInfoPage() {
+      document.getElementById('info-pages').style.display = 'none';
+      showPage('home'); // Or whatever page you want to return to
+    }
+
+    // Add content for other pages similarly
+    // You can expand this with more detailed information for each page
+  </script>
+</body>
+</html>

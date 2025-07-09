@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deepfake Audio Detection</title>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a0ca3;
+      --secondary: #f72585;
+      --dark: #1e1e2f;
+      --light: #f8f9fa;
+      --success: #4cc9f0;
+      --danger: #ef233c;
+      --warning: #f8961e;
+    }
+    
+    * { 
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f2f6fc;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Navbar */
+    nav {
+      background-color: var(--dark);
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+
+    nav a:hover {
+      background: rgba(255,255,255,0.1);
+      text-decoration: none;
+    }
+
+    /* Main Container */
+    .container {
+      padding: 40px 20px;
+      text-align: center;
+      min-height: calc(100vh - 150px);
+      transition: opacity 0.3s ease;
+    }
+
+    /* Cards */
+    .card {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      max-width: 500px;
+      margin: 20px auto;
+      animation: fadeIn 0.5s ease;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    /* Forms */
+    input, button, .btn {
+      padding: 12px 15px;
+      margin: 12px 0;
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    button, .btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover, .btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .logout-btn {
+      background-color: var(--danger);
+    }
+
+    .logout-btn:hover {
+      background-color: #d00000;
+    }
+
+    /* Utility Classes */
+    .hidden {
+      display: none !important;
+    }
+
+    .link {
+      color: var(--primary);
+      cursor: pointer;
+      font-size: 0.9em;
+      margin-top: 10px;
+      display: inline-block;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    /* Dashboard */
+    .dashboard-section {
+      text-align: left;
+      margin: 30px auto;
+      max-width: 800px;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    /* File Upload */
+    .file-upload-area {
+      margin: 20px 0;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--primary);
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      transition: all 0.3s;
+      margin: 15px 0;
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .drop-zone__prompt {
+      font-size: 18px;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .drop-zone--over {
+      border-color: var(--primary-dark);
+      background: rgba(67, 97, 238, 0.1);
+    }
+
+    .drop-zone__input {
+      display: none;
+    }
+
+    .file-preview {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      background: #f8f9fa;
+      border: 1px solid #eee;
+    }
+
+    .file-info {
+      margin-bottom: 10px;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      margin: 20px 0;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-bar__fill {
+      height: 100%;
+      background: var(--success);
+      transition: width 0.5s ease;
+    }
+
+    /* Results */
+    #resultBox {
+      margin: 20px 0;
+      padding: 20px;
+      border-radius: 8px;
+      background: #f8f9fa;
+      text-align: left;
+    }
+
+    .result-real {
+      color: var(--success);
+    }
+
+    .result-fake {
+      color: var(--danger);
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--dark);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      animation: slideIn 0.3s, fadeOut 0.5s 2.5s;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--dark);
+      color: white;
+      padding: 50px 20px;
+      margin-top: 50px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    footer h4 {
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: var(--light);
+    }
+
+    footer ul {
+      list-style: none;
+    }
+
+    footer li {
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    footer li:hover {
+      color: var(--success);
+      transform: translateX(5px);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav {
+        flex-direction: column;
+        padding: 15px;
+      }
+      
+      nav > div {
+        margin: 10px 0;
+      }
+      
+      .card {
+        padding: 20px;
+      }
+      
+      .dashboard-section {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div><strong>Deepfake Audio Detection</strong></div>
+    <div id="nav-links"></div>
+  </nav>
+
+  <div id="home" class="container">
+    <div class="card">
+      <h2>Welcome to Deepfake Audio Detection</h2>
+      <p>Upload and verify the authenticity of audio files using advanced AI technology.</p>
+      <button onclick="showPage('login')">Get Started</button>
+    </div>
+  </div>
+
+  <div id="login" class="container hidden">
+    <div class="card">
+      <h3>Login</h3>
+      <input type="text" id="loginUser" placeholder="Username">
+      <div style="position: relative;">
+        <input type="password" id="loginPass" placeholder="Password">
+        <span id="togglePassword" style="position: absolute; right: 15px; top: 25px; cursor: pointer;">👁️</span>
+      </div>
+      <button onclick="login()">Login</button>
+      <p id="loginMsg" style="color: var(--danger); margin-top: 10px;"></p>
+      <p class="link" onclick="showPage('signup')">New user? Sign up here</p>
+    </div>
+  </div>
+
+  <div id="signup" class="container hidden">
+    <div class="card">
+      <h3>Sign Up</h3>
+      <input type="text" id="newUser" placeholder="Choose Username">
+      <div style="position: relative;">
+        <input type="password" id="newPass" placeholder="Choose Password">
+        <span id="toggleNewPassword" style="position: absolute; right: 15px; top: 25px; cursor: pointer;">👁️</span>
+      </div>
+      <div id="passwordStrength" style="height: 5px; background: #eee; border-radius: 5px; margin: 5px 0 15px; overflow: hidden;">
+        <div id="passwordStrengthBar" style="height: 100%; width: 0%; background: var(--danger); transition: all 0.3s;"></div>
+      </div>
+      <button onclick="register()">Sign Up</button>
+      <p class="link" onclick="showPage('login')">Already have an account? Login</p>
+      <p id="signupMsg" style="color: var(--success); margin-top: 10px;"></p>
+    </div>
+  </div>
+
+  <div id="dashboard" class="container hidden">
+    <h2>Welcome, <span id="userRole"></span>!</h2>
+    
+    <div id="adminPanel" class="dashboard-section hidden">
+      <h3>Admin Dashboard</h3>
+      <p>Manage Users</p>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #f8f9fa;">
+              <th style="padding: 12px; text-align: left;">Username</th>
+              <th style="padding: 12px; text-align: left;">Role</th>
+              <th style="padding: 12px; text-align: left;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="userList">
+            <!-- Users will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="userPanel" class="dashboard-section">
+      <h3>Deepfake Detection Submission</h3>
+      
+      <div class="file-upload-area">
+        <label style="display: block; text-align: left; margin-bottom: 10px; font-weight: 600;">Deepfake Audio (1 file only):</label>
+        <div class="drop-zone" id="deepfakeDropZone">
+          <span class="drop-zone__prompt">Drop file here or click to upload</span>
+          <input type="file" id="deepfakeFile" class="drop-zone__input" accept="audio/*">
+        </div>
+        <div class="file-preview" id="deepfakePreview"></div>
+      </div>
+
+      <div class="file-upload-area" style="margin-top: 30px;">
+        <label style="display: block; text-align: left; margin-bottom: 10px; font-weight: 600;">Original Audio (up to 5 files):</label>
+        <div class="drop-zone" id="originalDropZone">
+          <span class="drop-zone__prompt">Drop files here or click to upload</span>
+          <input type="file" id="originalFiles" class="drop-zone__input" accept="audio/*" multiple>
+        </div>
+        <div class="file-preview" id="originalPreview"></div>
+      </div>
+
+      <button onclick="analyzeFiles()" style="margin-top: 20px;">Submit for Analysis</button>
+      
+      <div class="progress-container hidden" id="progressContainer">
+        <p>Analyzing files...</p>
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="progressBar" style="width: 0%"></div>
+        </div>
+      </div>
+      
+      <div id="resultBox"></div>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div id="toast"></div>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <h4>SUPPORT</h4>
+        <ul>
+          <li>Knowledge Base</li>
+          <li>FAQ</li>
+          <li>Privacy Policy</li>
+          <li>Terms of Service</li>
+        </ul>
+      </div>
+      <div>
+        <h4>PLATFORM</h4>
+        <ul>
+          <li>AI Detection</li>
+          <li>Voice Analysis</li>
+          <li>Speech Verification</li>
+          <li>Use Cases</li>
+        </ul>
+      </div>
+      <div>
+        <h4>DEVELOPERS</h4>
+        <ul>
+          <li>API Documentation</li>
+          <li>Integration Guides</li>
+          <li>Open Source</li>
+          <li>SDKs</li>
+        </ul>
+      </div>
+      <div>
+        <h4>COMPANY</h4>
+        <ul>
+          <li>About Us</li>
+          <li>Blog</li>
+          <li>Careers</li>
+          <li>Contact</li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Initialize local storage
+    if (!localStorage.getItem('users')) {
+      localStorage.setItem("users", JSON.stringify([
+        { username: "admin", password: "Admin@123", role: "admin" },
+        { username: "user1", password: "User@123", role: "user" }
+      ]));
+    }
+    
+    if (!localStorage.getItem('submissions')) {
+      localStorage.setItem("submissions", JSON.stringify([]));
+    }
+
+    let currentUser = null;
+
+    // DOM Loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      setupFileDrop('deepfakeDropZone', 'deepfakeFile', 'deepfakePreview');
+      setupFileDrop('originalDropZone', 'originalFiles', 'originalPreview');
+      
+      // Password toggle
+      document.getElementById('togglePassword').addEventListener('click', function() {
+        const passInput = document.getElementById('loginPass');
+        passInput.type = passInput.type === 'password' ? 'text' : 'password';
+      });
+      
+      document.getElementById('toggleNewPassword').addEventListener('click', function() {
+        const passInput = document.getElementById('newPass');
+        passInput.type = passInput.type === 'password' ? 'text' : 'password';
+      });
+      
+      // Password strength
+      document.getElementById('newPass').addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+      });
+      
+      showPage('home');
+    });
+
+    // Page Navigation
+    function showPage(id) {
+      document.querySelectorAll('.container').forEach(el => el.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      updateNavbar();
+      
+      if (id === 'dashboard' && currentUser) {
+        loadDashboard();
+      }
+    }
+
+    function updateNavbar() {
+      const nav = document.getElementById("nav-links");
+      nav.innerHTML = `
+        <a onclick="showPage('home')">Home</a>
+        <a onclick="showToast('About Project: Detects deepfake audio using AI')">About</a>
+        ${currentUser ? '<a onclick="showPage(\'dashboard\')">Dashboard</a><a onclick="logout()">Logout</a>' : '<a onclick="showPage(\'signup\')">Sign Up</a>'}
+        <a onclick="showToast('Contact: contact@deepfakedetect.com')">Contact</a>
+      `;
+    }
+
+    // Auth Functions
+    function register() {
+      const user = document.getElementById('newUser').value.trim();
+      const pass = document.getElementById('newPass').value;
+      const users = JSON.parse(localStorage.getItem("users"));
+      const msgEl = document.getElementById("signupMsg");
+
+      if (!user || !pass) {
+        msgEl.textContent = "Please fill all fields.";
+        msgEl.style.color = "var(--danger)";
+        return;
+      }
+      
+      if (user.length < 4) {
+        msgEl.textContent = "Username must be at least 4 characters.";
+        msgEl.style.color = "var(--danger)";
+        return;
+      }
+      
+      if (pass.length < 6) {
+        msgEl.textContent = "Password must be at least 6 characters.";
+        msgEl.style.color = "var(--danger)";
+        return;
+      }
+
+      if (users.find(u => u.username === user)) {
+        msgEl.textContent = "Username already exists.";
+        msgEl.style.color = "var(--danger)";
+        return;
+      }
+      
+      users.push({ username: user, password: pass, role: "user" });
+      localStorage.setItem("users", JSON.stringify(users));
+      msgEl.textContent = "Registration successful! Please login.";
+      msgEl.style.color = "var(--success)";
+      
+      // Clear form
+      document.getElementById('newUser').value = '';
+      document.getElementById('newPass').value = '';
+      document.getElementById('passwordStrengthBar').style.width = '0%';
+    }
+
+    function login() {
+      const user = document.getElementById('loginUser').value.trim();
+      const pass = document.getElementById('loginPass').value;
+      const users = JSON.parse(localStorage.getItem("users"));
+      const found = users.find(u => u.username === user && u.password === pass);
+      
+      if (found) {
+        currentUser = found;
+        document.getElementById("loginMsg").textContent = "";
+        showPage('dashboard');
+        showToast(`Welcome back, ${user}!`);
+      } else {
+        document.getElementById("loginMsg").textContent = "Invalid credentials.";
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      showPage('home');
+      showToast("Logged out successfully");
+    }
+
+    // Dashboard Functions
+    function loadDashboard() {
+      const role = currentUser.role;
+      document.getElementById("userRole").textContent = `${currentUser.username} (${role})`;
+      
+      if (role === "admin") {
+        document.getElementById("adminPanel").classList.remove("hidden");
+        loadUserList();
+      } else {
+        document.getElementById("adminPanel").classList.add("hidden");
+      }
+      
+      loadRecentSubmissions();
+    }
+
+    function loadUserList() {
+      const users = JSON.parse(localStorage.getItem("users"));
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+      
+      users.forEach(u => {
+        list.innerHTML += `
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 12px;">${u.username}</td>
+            <td style="padding: 12px;">${u.role}</td>
+            <td style="padding: 12px;">
+              ${u.role !== 'admin' ? `<button onclick="deleteUser('${u.username}')" style="padding: 5px 10px; background: var(--danger); font-size: 12px;">Delete</button>` : 'Admin'}
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function deleteUser(username) {
+      if (username === currentUser.username) {
+        showToast("Cannot delete your own account", "error");
+        return;
+      }
+      
+      const users = JSON.parse(localStorage.getItem("users"));
+      const updatedUsers = users.filter(u => u.username !== username);
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      loadUserList();
+      showToast(`User ${username} deleted`);
+    }
+
+    function loadRecentSubmissions() {
+      const submissions = JSON.parse(localStorage.getItem("submissions"));
+      const userSubmissions = submissions.filter(s => s.user === currentUser.username);
+      
+      if (userSubmissions.length > 0) {
+        const resultBox = document.getElementById("resultBox");
+        resultBox.innerHTML = `<h3>Recent Analyses</h3>`;
+        
+        userSubmissions.slice(0, 3).forEach(sub => {
+          resultBox.innerHTML += `
+            <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+              <p><strong>File:</strong> ${sub.fileName}</p>
+              <p><strong>Date:</strong> ${new Date(sub.date).toLocaleString()}</p>
+              <p><strong>Result:</strong> <span class="${sub.result === 'Real' ? 'result-real' : 'result-fake'}">${sub.result}</span></p>
+              <p><strong>Confidence:</strong> ${sub.confidence}%</p>
+            </div>
+          `;
+        });
+      }
+    }
+
+    // File Handling
+    function setupFileDrop(zoneId, inputId, previewId) {
+      const dropZone = document.getElementById(zoneId);
+      const fileInput = document.getElementById(inputId);
+      const preview = document.getElementById(previewId);
+
+      dropZone.addEventListener('click', () => fileInput.click());
+      
+      fileInput.addEventListener('change', (e) => {
+        if (fileInput.files.length) {
+          updatePreview(fileInput.files, preview, inputId === 'deepfakeFile');
+        }
+      });
+
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+      });
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+      });
+
+      dropZone.addEventListener('drop', handleDrop, false);
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      function highlight() {
+        dropZone.classList.add('drop-zone--over');
+      }
+
+      function unhighlight() {
+        dropZone.classList.remove('drop-zone--over');
+      }
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        updatePreview(files, preview, inputId === 'deepfakeFile');
+      }
+
+      function updatePreview(files, previewElement, isSingle) {
+        if (isSingle) {
+          const file = files[0];
+          previewElement.innerHTML = `
+            <div class="file-info">
+              <p><strong>File:</strong> ${file.name}</p>
+              <p><strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB</p>
+              <p><strong>Type:</strong> ${file.type || 'audio/*'}</p>
+            </div>
+          `;
+        } else {
+          previewElement.innerHTML = '<strong>Selected files:</strong>';
+          Array.from(files).slice(0, 5).forEach(file => {
+            previewElement.innerHTML += `
+              <div class="file-info" style="margin-top: 10px;">
+                <p>• ${file.name} (${(file.size / 1024).toFixed(2)} KB)</p>
+              </div>
+            `;
+          });
+          
+          if (files.length > 5) {
+            previewElement.innerHTML += `<p style="color: var(--warning);">Only first 5 files will be processed</p>`;
+          }
+        }
+      }
+    }
+
+    function analyzeFiles() {
+      const fakeFile = document.getElementById("deepfakeFile").files[0];
+      const originalFiles = document.getElementById("originalFiles").files;
+
+      if (!fakeFile) {
+        showToast("Please upload a deepfake audio file", "error");
+        return;
+      }
+      
+      if (originalFiles.length === 0 || originalFiles.length > 5) {
+        showToast("Please upload 1-5 original audio files", "error");
+        return;
+      }
+
+      const progressContainer = document.getElementById("progressContainer");
+      const progressBar = document.getElementById("progressBar");
+      const resultBox = document.getElementById("resultBox");
+      
+      resultBox.innerHTML = '';
+      progressContainer.classList.remove('hidden');
+      
+      // Simulate analysis progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 10;
+        if (progress > 100) progress = 100;
+        progressBar.style.width = `${progress}%`;
+        
+        if (progress === 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            progressContainer.classList.add('hidden');
+            showAnalysisResult(fakeFile.name);
+          }, 500);
+        }
+      }, 300);
+    }
+
+    function showAnalysisResult(filename) {
+      const resultBox = document.getElementById("resultBox");
+      const isFake = Math.random() > 0.3; // 70% chance of being fake for demo
+      const confidence = (Math.random() * 30 + 70).toFixed(1); // 70-100% confidence
+      
+      // Save submission
+      const submissions = JSON.parse(localStorage.getItem("submissions"));
+      submissions.push({
+        user: currentUser.username,
+        fileName: filename,
+        date: new Date().toISOString(),
+        result: isFake ? "Fake" : "Real",
+        confidence: confidence
+      });
+      localStorage.setItem("submissions", JSON.stringify(submissions));
+      
+      // Display result
+      resultBox.innerHTML = `
+        <h3>Analysis Result</h3>
+        <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+          <p><strong>File analyzed:</strong> ${filename}</p>
+          <p><strong>Result:</strong> 
+            <span class="${isFake ? 'result-fake' : 'result-real'}" style="font-weight: bold;">
+              ${isFake ? 'DEEPFAKE DETECTED' : 'AUTHENTIC AUDIO'}
+            </span>
+          </p>
+          <p><strong>Confidence:</strong> ${confidence}%</p>
+          <p><strong>Analysis date:</strong> ${new Date().toLocaleString()}</p>
+        </div>
+        
+        <h4>Detailed Analysis</h4>
+        <ul style="text-align: left; margin: 15px 0;">
+          <li>${isFake ? 'Detected artificial voice patterns' : 'Natural voice patterns detected'}</li>
+          <li>${isFake ? 'Inconsistencies in spectral features' : 'Consistent spectral features'}</li>
+          <li>${isFake ? 'Abnormal micro-timing variations' : 'Normal speech rhythm'}</li>
+        </ul>
+      `;
+      
+      showToast(`Analysis complete for ${filename}`);
+    }
+
+    // Utility Functions
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.style.display = "block";
+      toast.style.background = type === "error" ? "var(--danger)" : "var(--dark)";
+      
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 3000);
+    }
+
+    function checkPasswordStrength(password) {
+      const strengthBar = document.getElementById("passwordStrengthBar");
+      let strength = 0;
+      
+      if (password.length > 7) strength += 25;
+      if (password.match(/[A-Z]/)) strength += 25;
+      if (password.match(/[0-9]/)) strength += 25;
+      if (password.match(/[^A-Za-z0-9]/)) strength += 25;
+      
+      strengthBar.style.width = `${strength}%`;
+      
+      if (strength < 50) {
+        strengthBar.style.background = "var(--danger)";
+      } else if (strength < 75) {
+        strengthBar.style.background = "var(--warning)";
+      } else {
+        strengthBar.style.background = "var(--success)";
+      }
+    }
+  </script>
+</body>
+</html>

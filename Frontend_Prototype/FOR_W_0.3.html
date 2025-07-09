@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deepfake Audio Detection</title>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a0ca3;
+      --secondary: #f72585;
+      --dark: #1e1e2f;
+      --light: #f8f9fa;
+      --success: #4cc9f0;
+      --danger: #ef233c;
+      --warning: #f8961e;
+    }
+    
+    * { 
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f2f6fc;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Navbar */
+    nav {
+      background-color: var(--dark);
+      color: white;
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav a {
+      margin: 0 15px;
+      text-decoration: none;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+
+    nav a:hover {
+      background: rgba(255,255,255,0.1);
+      text-decoration: none;
+    }
+
+    /* Main Container */
+    .container {
+      padding: 40px 20px;
+      text-align: center;
+      min-height: calc(100vh - 150px);
+      transition: opacity 0.3s ease;
+    }
+
+    /* Cards */
+    .card {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      max-width: 500px;
+      margin: 20px auto;
+      animation: fadeIn 0.5s ease;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    /* Forms */
+    input, button, .btn {
+      padding: 12px 15px;
+      margin: 12px 0;
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+
+    button, .btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover, .btn:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .logout-btn {
+      background-color: var(--danger);
+    }
+
+    .logout-btn:hover {
+      background-color: #d00000;
+    }
+
+    /* Utility Classes */
+    .hidden {
+      display: none !important;
+    }
+
+    .link {
+      color: var(--primary);
+      cursor: pointer;
+      font-size: 0.9em;
+      margin-top: 10px;
+      display: inline-block;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    /* Dashboard */
+    .dashboard-section {
+      text-align: left;
+      margin: 30px auto;
+      max-width: 800px;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    /* File Upload */
+    .file-upload-area {
+      margin: 20px 0;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--primary);
+      border-radius: 8px;
+      padding: 40px;
+      text-align: center;
+      transition: all 0.3s;
+      margin: 15px 0;
+      background: rgba(67, 97, 238, 0.05);
+    }
+
+    .drop-zone__prompt {
+      font-size: 18px;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .drop-zone--over {
+      border-color: var(--primary-dark);
+      background: rgba(67, 97, 238, 0.1);
+    }
+
+    .drop-zone__input {
+      display: none;
+    }
+
+    .file-preview {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 8px;
+      background: #f8f9fa;
+      border: 1px solid #eee;
+    }
+
+    .file-info {
+      margin-bottom: 10px;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      margin: 20px 0;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-bar__fill {
+      height: 100%;
+      background: var(--success);
+      transition: width 0.5s ease;
+    }
+
+    /* Results */
+    #resultBox {
+      margin: 20px 0;
+      padding: 20px;
+      border-radius: 8px;
+      background: #f8f9fa;
+      text-align: left;
+    }
+
+    .result-real {
+      color: var(--success);
+    }
+
+    .result-fake {
+      color: var(--danger);
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--dark);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      display: none;
+      z-index: 1000;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      animation: slideIn 0.3s, fadeOut 0.5s 2.5s;
+    }
+
+    /* Footer */
+    footer {
+      background: var(--dark);
+      color: white;
+      padding: 50px 20px;
+      margin-top: 50px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    footer h4 {
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: var(--light);
+    }
+
+    footer ul {
+      list-style: none;
+    }
+
+    footer li {
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    footer li:hover {
+      color: var(--success);
+      transform: translateX(5px);
+    }
+
+    /* Info Page Styles */
+    .info-page {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+    
+    .info-page h2 {
+      color: var(--primary);
+      margin-bottom: 20px;
+      border-bottom: 2px solid #f2f6fc;
+      padding-bottom: 10px;
+    }
+    
+    .info-page p {
+      margin-bottom: 15px;
+      line-height: 1.7;
+    }
+    
+    .info-page ul {
+      margin: 15px 0;
+      padding-left: 20px;
+    }
+    
+    .info-page li {
+      margin-bottom: 8px;
+    }
+    
+    .back-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: var(--primary);
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: all 0.3s;
+    }
+    
+    .back-btn:hover {
+      background: var(--primary-dark);
+    }
+    /* FAQ Styles */
+.faq-section {
+  margin: 30px 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 20px;
+}
+
+.faq-section h3 {
+  color: var(--primary-dark);
+  margin-bottom: 15px;
+}
+
+.faq-item {
+  margin-bottom: 15px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.faq-question {
+  padding: 15px;
+  background: #f8f9fa;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.faq-question:hover {
+  background: #e9ecef;
+}
+
+.faq-answer {
+  padding: 0 15px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.faq-answer.show {
+  padding: 15px;
+  max-height: 1000px;
+}
+
+.faq-answer ol, .faq-answer ul {
+  margin: 10px 0 10px 20px;
+}
+
+.faq-answer li {
+  margin-bottom: 8px;
+}
+
+/* Add to your existing styles */
+
+.info-page h3 {
+  margin-top: 25px;
+  color: var(--primary-dark);
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.info-page h4 {
+  margin-top: 15px;
+  font-size: 1.1em;
+  color: var(--primary);
+}
+
+.info-page ul {
+  margin-left: 20px;
+}
+
+.info-page li {
+  margin-bottom: 8px;
+}
+
+#resetEmail {
+  padding: 12px 15px;
+  margin: 12px 0;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+#resetEmail:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+}
+
+/* Blog Post Styles */
+.blog-post {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  transition: transform 0.3s, box-shadow 0.3s;
+  margin-bottom: 30px;
+  padding: 25px;
+  border-left: 4px solid var(--primary);
+}
+
+.blog-post:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.post-title {
+  font-size: 1.6em;
+  color: var(--primary-dark);
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.post-date {
+  color: #777;
+  font-size: 0.9em;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  font-style: italic;
+}
+
+.post-date:before {
+  content: "📅";
+  margin-right: 8px;
+}
+
+.post-content {
+  color: #444;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  font-size: 1.05em;
+}
+
+.post-content p {
+  margin-bottom: 15px;
+}
+
+.post-content ul, .post-content ol {
+  margin: 15px 0 15px 20px;
+}
+
+.post-content li {
+  margin-bottom: 10px;
+}
+
+.blog-post-actions {
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.edit-post-btn, .delete-post-btn {
+  padding: 8px 15px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.edit-post-btn {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+}
+
+.edit-post-btn:hover {
+  background-color: var(--primary-dark);
+}
+
+.delete-post-btn {
+  background-color: var(--danger);
+  color: white;
+  border: none;
+}
+
+.delete-post-btn:hover {
+  background-color: #d00000;
+}
+
+/* Password */
+.error-message {
+  background-color: rgba(239, 35, 60, 0.1);
+  color: var(--danger);
+  border-left: 4px solid var(--danger);
+}
+
+.success-message {
+  background-color: rgba(76, 201, 240, 0.1);
+  color: var(--success);
+  border-left: 4px solid var(--success);
+}
+
+#passwordRules ul {
+  margin-top: 5px;
+  padding-left: 20px;
+}
+
+#passwordRules li {
+  margin-bottom: 3px;
+  transition: color 0.3s;
+}
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      nav {
+        flex-direction: column;
+        padding: 15px;
+      }
+      
+      nav > div {
+        margin: 10px 0;
+      }
+      
+      .card {
+        padding: 20px;
+      }
+      
+      .dashboard-section {
+        padding: 20px;
+      }
+      
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div><strong>Deepfake Audio Detection</strong></div>
+    <div id="nav-links"></div>
+  </nav>
+
+  <div id="home" class="container">
+    <div class="card">
+      <h2>Welcome to Deepfake Audio Detection</h2>
+      <p>Upload and verify the authenticity of audio files using advanced AI technology.</p>
+      <button onclick="showPage('login')">Get Started</button>
+    </div>
+  </div>
+
+  <div id="login" class="container hidden">
+    <div class="card">
+      <h3>Login</h3>
+      <input type="text" id="loginUser" placeholder="Username">
+      <div style="position: relative;">
+        <input type="password" id="loginPass" placeholder="Password">
+        <span id="togglePassword" style="position: absolute; right: 15px; top: 25px; cursor: pointer;">👁️</span>
+      </div>
+      <button onclick="login()">Login</button>
+      <p id="loginMsg" style="color: var(--danger); margin-top: 10px;"></p>
+      <p class="link" onclick="showPage('signup')">New user? Sign up here</p>
+      <!-- Add this forgot password link -->
+      <p class="link" onclick="showPage('forgot-password')">Forgot password?</p>
+    </div>
+  </div>
+  
+  <div id="forgot-password" class="container hidden">
+    <div class="card">
+      <h3>Reset Password</h3>
+      <input type="text" id="resetEmail" placeholder="Enter your email">
+      <button onclick="sendResetLink()">Send Reset Link</button>
+      <p id="resetMsg" style="color: var(--success); margin-top: 10px;"></p>
+      <p class="link" onclick="showPage('login')">Back to Login</p>
+    </div>
+  </div>
+
+  <div id="signup" class="container hidden">
+    <div class="card">
+      <h3>Sign Up</h3>
+      <input type="text" id="newUser" placeholder="Choose Username">
+      <input type="email" id="newEmail" placeholder="Your Email Address">
+      <div style="position: relative;">
+        <input type="password" id="newPass" placeholder="Choose Password">
+        <span id="toggleNewPassword" style="position: absolute; right: 15px; top: 25px; cursor: pointer;">👁️</span>
+      </div>
+      <div style="position: relative; margin-top: 12px;">
+        <input type="password" id="confirmPass" placeholder="Confirm Password">
+        <span id="toggleConfirmPassword" style="position: absolute; right: 15px; top: 25px; cursor: pointer;">👁️</span>
+      </div>
+      <div id="passwordStrength" style="height: 5px; background: #eee; border-radius: 5px; margin: 5px 0 15px; overflow: hidden;">
+        <div id="passwordStrengthBar" style="height: 100%; width: 0%; transition: all 0.3s;"></div>
+      </div>
+      <div id="passwordRules" style="text-align: left; font-size: 0.8em; color: var(--danger); margin-bottom: 15px; display: none;">
+        <p>Password must contain:</p>
+        <ul style="margin-left: 20px;">
+          <li id="rule-length">At least 8 characters</li>
+          <li id="rule-upper">One uppercase letter</li>
+          <li id="rule-number">One number</li>
+          <li id="rule-special">One special character</li>
+        </ul>
+      </div>
+      <button id="signupBtn" onclick="register()">Sign Up</button>
+      <p class="link" onclick="showPage('login')">Already have an account? Login</p>
+      <div id="signupMsg" style="margin-top: 10px; padding: 10px; border-radius: 5px; display: none;"></div>
+    </div>
+  </div>
+
+  <div id="dashboard" class="container hidden">
+    <h2>Welcome, <span id="userRole"></span>!</h2>
+    
+    <div id="adminPanel" class="dashboard-section hidden">
+      <h3>Admin Dashboard</h3>
+      <p>Manage Users</p>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #f8f9fa;">
+              <th style="padding: 12px; text-align: left;">Username</th>
+              <th style="padding: 12px; text-align: left;">Role</th>
+              <th style="padding: 12px; text-align: left;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="userList">
+            <!-- Users will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="userPanel" class="dashboard-section">
+      <h3>Deepfake Detection Submission</h3>
+      
+      <div class="file-upload-area">
+        <label style="display: block; text-align: left; margin-bottom: 10px; font-weight: 600;">Deepfake Audio (1 file only):</label>
+        <div class="drop-zone" id="deepfakeDropZone">
+          <span class="drop-zone__prompt">Drop file here or click to upload</span>
+          <input type="file" id="deepfakeFile" class="drop-zone__input" accept="audio/*">
+        </div>
+        <div class="file-preview" id="deepfakePreview"></div>
+      </div>
+
+      <div class="file-upload-area" style="margin-top: 30px;">
+        <label style="display: block; text-align: left; margin-bottom: 10px; font-weight: 600;">Original Audio (up to 5 files):</label>
+        <div class="drop-zone" id="originalDropZone">
+          <span class="drop-zone__prompt">Drop files here or click to upload</span>
+          <input type="file" id="originalFiles" class="drop-zone__input" accept="audio/*" multiple>
+        </div>
+        <div class="file-preview" id="originalPreview"></div>
+      </div>
+
+      <button onclick="analyzeFiles()" style="margin-top: 20px;">Submit for Analysis</button>
+      
+      <div class="progress-container hidden" id="progressContainer">
+        <p>Analyzing files...</p>
+        <div class="progress-bar">
+          <div class="progress-bar__fill" id="progressBar" style="width: 0%"></div>
+        </div>
+      </div>
+      
+      <div id="resultBox"></div>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- Info Pages Section -->
+  <div id="info-pages" style="display:none;">
+    <!-- About Us Page -->
+    <div id="about-us-page" class="info-page hidden">
+      <h2>About Us</h2>
+      <p>Welcome to Deepfake Audio Detection, a cutting-edge platform dedicated to identifying synthetic audio content with advanced AI technology.</p>
+      
+      <h3>Our Mission</h3>
+      <p>To provide reliable, accessible tools for detecting manipulated audio content and help combat misinformation in digital media.</p>
+      
+      <h3>Our Team</h3>
+      <p>We are a group of AI researchers and engineers, and cybersecurity experts with a vast knowledge in data science committed to developing robust detection solutions.</p>
+      
+      <h3>Technology</h3>
+      <ul>
+        <li>Advanced machine learning models trained on thousands of hours of audio</li>
+        <li>Proprietary algorithms detecting subtle audio artifacts</li>
+        <li>Continuous updates to keep pace with evolving deepfake technology</li>
+      </ul>
+      
+      <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+    </div>
+
+    <!-- FAQ Page -->
+    <div id="faq-page" class="info-page hidden">
+      <h2>Frequently Asked Questions</h2>
+      
+      <h3>How does the detection work?</h3>
+      <p>Our system analyzes audio files for subtle artifacts and inconsistencies that are characteristic of synthetic media.</p>
+      
+      <h3>What audio formats are supported?</h3>
+      <p>We support common formats including MP3, WAV, AAC, and FLAC.</p>
+      
+      <h3>How accurate is the detection?</h3>
+      <p>Our current models achieve 92-96% accuracy depending on audio quality.</p>
+      
+      <h3>Is there a file size limit?</h3>
+      <p>Yes, the maximum file size is 50MB for free accounts.</p>
+      
+      <h3>How long does analysis take?</h3>
+      <p>Typically 15-30 seconds per minute of audio, depending on server load.</p>
+      
+      <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+    </div>
+
+    <!-- Privacy Policy Page -->
+    <div id="privacy-policy-page" class="info-page hidden">
+      <h2>Privacy Policy</h2>
+      <p>Last Updated: MAY 2025</p>
+      
+      <h3>Information We Collect</h3>
+      <p>We collect minimal personal data required to provide our services, including:</p>
+      <ul>
+        <li>Account information (username, email)</li>
+        <li>Uploaded audio files (processed but not stored long-term)</li>
+        <li>Usage data for service improvement</li>
+      </ul>
+      
+      <h3>How We Use Information</h3>
+      <ul>
+        <li>To provide and maintain our service</li>
+        <li>To improve detection algorithms</li>
+        <li>To communicate with users</li>
+      </ul>
+      
+      <h3>Data Security</h3>
+      <p>We implement industry-standard security measures including encryption and access controls.</p>
+      
+      <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+    </div>
+
+    <!-- API Documentation Page -->
+    <div id="api-docs-page" class="info-page hidden">
+      <h2>API Documentation</h2>
+      <p>Integrate our deepfake detection capabilities into your applications.</p>
+      
+      <h3>Endpoints</h3>
+      <pre><code>POST https://api.foranalyst.com/v1/analyze
+Content-Type: multipart/form-data</code></pre>
+      
+      <h3>Authentication</h3>
+      <p>Use your API key in the Authorization header:</p>
+      <pre><code>Authorization: Bearer YOUR_API_KEY</code></pre>
+      
+      <h3>Response Format</h3>
+      <pre><code>{
+  "status": "success",
+  "result": "fake",
+  "confidence": 94.5,
+  "features": {
+    "spectral_analysis": "inconsistent",
+    "voice_patterns": "synthetic"
+  }
+}</code></pre>
+      
+      <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+    </div>
+
+    <!-- Contact Page -->
+    <div id="contact-page" class="info-page hidden">
+      <h2>Contact Us</h2>
+      
+      <h3>Support</h3>
+      <p>Email: support@foranalyst.com<br>
+      Phone: +91 8169156070</p>
+      
+      <h3>Business Inquiries</h3>
+      <p>Email: partnerships@foranalyst.com</p>
+      
+      <h3>Press</h3>
+      <p>Email: press@foranalyst.com</p>
+      
+      <h3>Office Address</h3>
+      <p>Ajeenkya D Y Patil School of Engineering<br>
+      Lohegaon, Pune, 411047<br>
+      INDIA</p>
+      
+      <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+    </div>
+    
+    <!-- knowledge base page -->
+    <!-- Add this inside the info-pages div, after the other pages -->
+<div id="knowledge-base-page" class="info-page hidden">
+  <h2>Knowledge Base</h2>
+  <p>Comprehensive guides and tutorials to help you get started with Deepfake Audio Detection.</p>
+  
+  <div class="faq-section">
+    <h3>Getting Started</h3>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How to use deepfake audio detection?
+      </div>
+      <div class="faq-answer">
+        <p>To use our deepfake audio detection:</p>
+        <ol>
+          <li>Sign up for an account or log in if you already have one</li>
+          <li>Upload the suspicious audio file you want to analyze</li>
+          <li>Optionally upload original reference audio files for comparison</li>
+          <li>Click "Submit for Analysis"</li>
+          <li>View the results showing likelihood of being deepfake</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Sign up for FOR Analyst
+      </div>
+      <div class="faq-answer">
+        <p>To sign up for FOR Analyst:</p>
+        <ol>
+          <li>Click on "Sign Up" from the homepage</li>
+          <li>Choose a username and strong password</li>
+          <li>Complete the registration form</li>
+          <li>You'll be automatically logged in after registration</li>
+          <li>Check your email for a welcome message</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Can I set up an admin user?
+      </div>
+      <div class="faq-answer">
+        <p>Admin users can only be created by existing admin users:</p>
+        <ol>
+          <li>Log in with an admin account</li>
+          <li>Go to the Admin Dashboard</li>
+          <li>Click "Add New User"</li>
+          <li>Set the role to "admin" during creation</li>
+          <li>Only share admin credentials with trusted team members</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How to reset your password?
+      </div>
+      <div class="faq-answer">
+        <p>To reset your password:</p>
+        <ol>
+          <li>Go to the login page</li>
+          <li>Click "Forgot Password"</li>
+          <li>Enter your registered email address</li>
+          <li>Check your email for a password reset link</li>
+          <li>Follow the link to create a new password</li>
+          <li>Password must be at least 8 characters with uppercase, lowercase, and numbers</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="faq-section">
+    <h3>Project Management</h3>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How to start a project?
+      </div>
+      <div class="faq-answer">
+        <p>Starting a new project is simple:</p>
+        <ol>
+          <li>Log in to your account</li>
+          <li>Click "New Project" in the dashboard</li>
+          <li>Name your project and add a description</li>
+          <li>Upload your initial audio files</li>
+          <li>Set project privacy settings</li>
+          <li>Click "Create Project" to begin</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How to manage projects?
+      </div>
+      <div class="faq-answer">
+        <p>Project management features include:</p>
+        <ul>
+          <li><strong>Organization:</strong> Group projects into folders</li>
+          <li><strong>Search:</strong> Quickly find projects by name or tags</li>
+          <li><strong>Sharing:</strong> Control who can view or edit each project</li>
+          <li><strong>Versioning:</strong> Track changes and revert if needed</li>
+          <li><strong>Export:</strong> Download project data for backup</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        What are best practices for creating projects?
+      </div>
+      <div class="faq-answer">
+        <p>Follow these best practices:</p>
+        <ul>
+          <li>Use descriptive names for easy identification</li>
+          <li>Add tags to categorize your projects</li>
+          <li>Keep original and modified files in separate folders</li>
+          <li>Document your analysis process in project notes</li>
+          <li>Regularly back up important projects</li>
+          <li>Use consistent naming conventions</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Can I invite other people to work on my projects?
+      </div>
+      <div class="faq-answer">
+        <p>Yes, collaboration is encouraged:</p>
+        <ol>
+          <li>Open the project you want to share</li>
+          <li>Click "Share" in the project menu</li>
+          <li>Enter the email of the person you want to invite</li>
+          <li>Set permissions (View, Edit, or Admin)</li>
+          <li>Add an optional message</li>
+          <li>Click "Send Invitation"</li>
+        </ol>
+        <p>The collaborator will receive an email with access instructions.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="faq-section">
+    <h3>Audio Processing</h3>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How to use text-to-speech?
+      </div>
+      <div class="faq-answer">
+        <p>Our text-to-speech feature:</p>
+        <ol>
+          <li>Go to the "Create" section in your dashboard</li>
+          <li>Select "Text-to-Speech"</li>
+          <li>Choose a voice from our library</li>
+          <li>Enter or paste your text</li>
+          <li>Adjust speech parameters (speed, pitch, etc.)</li>
+          <li>Click "Generate" to create the audio</li>
+          <li>Download or save to your project</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How to use Speech-to-Speech?
+      </div>
+      <div class="faq-answer">
+        <p>Speech-to-speech conversion steps:</p>
+        <ol>
+          <li>Upload a source audio file</li>
+          <li>Select a target voice profile</li>
+          <li>Adjust transformation settings</li>
+          <li>Preview the conversion</li>
+          <li>Apply enhancements if needed</li>
+          <li>Save the converted audio</li>
+        </ol>
+        <p>Note: High-quality source audio produces better results.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How to add audio to your clips?
+      </div>
+      <div class="faq-answer">
+        <p>Adding audio to video clips:</p>
+        <ol>
+          <li>Upload your video file</li>
+          <li>Select "Add Audio Track"</li>
+          <li>Choose from your library or upload new audio</li>
+          <li>Sync the audio with the video timeline</li>
+          <li>Adjust volume levels</li>
+          <li>Apply fade in/out if needed</li>
+          <li>Export the final composition</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How much data is needed?
+      </div>
+      <div class="faq-answer">
+        <p>Data requirements depend on your use case:</p>
+        <ul>
+          <li><strong>Basic analysis:</strong> Minimum 10 seconds of audio</li>
+          <li><strong>Voice cloning:</strong> 30+ minutes of clean recordings</li>
+          <li><strong>Accurate detection:</strong> Multiple samples for comparison</li>
+          <li><strong>Project storage:</strong> 1GB free, upgradable to 100GB</li>
+        </ul>
+        <p>Higher quality inputs yield more reliable results.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="faq-section">
+    <h3>Account & Support</h3>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How to reach support?
+      </div>
+      <div class="faq-answer">
+        <p>Multiple support channels available:</p>
+        <ul>
+          <li><strong>Email:</strong> support@foranalyst.com (24-hour response)</li>
+          <li><strong>Phone:</strong> +91 8169156070 (9AM-6PM IST)</li>
+          <li><strong>Live Chat:</strong> Available in your dashboard</li>
+          <li><strong>Community Forum:</strong> Ask other users</li>
+          <li><strong>Knowledge Base:</strong> Search our documentation</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How do you use both Text-to-Speech & Speech-to-Speech together?
+      </div>
+      <div class="faq-answer">
+        <p>Combining both technologies:</p>
+        <ol>
+          <li>First generate text-to-speech from your script</li>
+          <li>Use that output as input for speech-to-speech</li>
+          <li>Select a different target voice for the conversion</li>
+          <li>Apply emotional tone adjustments if needed</li>
+          <li>This creates a synthetic voice that never actually spoke your text</li>
+        </ol>
+        <p>Use responsibly and ethically.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How do I generate multiple clip variations?
+      </div>
+      <div class="faq-answer">
+        <p>Creating variations is easy:</p>
+        <ol>
+          <li>Select your base audio clip</li>
+          <li>Click "Create Variations"</li>
+          <li>Adjust parameters like:
+            <ul>
+              <li>Voice characteristics</li>
+              <li>Speech speed and rhythm</li>
+              <li>Emotional tone</li>
+              <li>Background noise levels</li>
+            </ul>
+          </li>
+          <li>Generate multiple versions</li>
+          <li>Compare and select your preferred version</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How do I clone my voice with custom data uploading?
+      </div>
+      <div class="faq-answer">
+        <p>Voice cloning process:</p>
+        <ol>
+          <li>Record at least 30 minutes of clean audio</li>
+          <li>Include various speech patterns and emotions</li>
+          <li>Upload your recordings to the Voice Lab</li>
+          <li>Our AI will analyze and create a voice model</li>
+          <li>Training typically takes 2-4 hours</li>
+          <li>Test with sample text to verify quality</li>
+        </ol>
+        <p>Ethical note: Only clone voices you have rights to.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Understanding the Importance of Consent for Voice Cloning
+      </div>
+      <div class="faq-answer">
+        <p>Key consent considerations:</p>
+        <ul>
+          <li>Always obtain explicit permission from voice owners</li>
+          <li>Document consent for legal protection</li>
+          <li>Respect withdrawal of consent</li>
+          <li>Be transparent about how the voice will be used</li>
+          <li>Consider ethical implications of synthetic media</li>
+          <li>Follow all applicable laws and regulations</li>
+        </ul>
+        <p>We reserve the right to terminate accounts violating these principles.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How to cancel your subscription?
+      </div>
+      <div class="faq-answer">
+        <p>Subscription cancellation steps:</p>
+        <ol>
+          <li>Go to Account Settings</li>
+          <li>Select "Billing"</li>
+          <li>Click "Cancel Subscription"</li>
+          <li>Select a reason (optional)</li>
+          <li>Confirm cancellation</li>
+        </ol>
+        <p>Note: You'll retain access until the end of your billing period.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        How to Set a Speaker's Language (Accents)?
+      </div>
+      <div class="faq-answer">
+        <p>Configuring language and accents:</p>
+        <ol>
+          <li>Select your voice model</li>
+          <li>Choose "Language Settings"</li>
+          <li>Pick from 50+ languages and dialects</li>
+          <li>Adjust accent strength if available</li>
+          <li>Test with sample text</li>
+          <li>Save your preferences</li>
+        </ol>
+        <p>Pro tip: Combine with pronunciation guides for authentic results.</p>
+      </div>
+    </div>
+  </div>
+
+  <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+</div>
+
+<div id="terms-page" class="info-page hidden">
+  <h2>Terms of Service</h2>
+  <p><strong>Last Updated: 07/30/2024</strong></p>
+
+  <p>Welcome to FOR Analyst.</p>
+
+  <p>FOR Analyst ("FOR Analyst", "we", "our" or "us") specializes in producing synthetic voices by applying our proprietary artificial intelligence (AI) processes and software against audio data. These Terms of Service (this "Agreement") set forth the terms and conditions that govern the access and use of our web platform, application programing interface (API), AI voice generator software-as-a-service, AI Models (as defined below) and related applications and services, including those identified on an applicable order form (collectively, the "Services").</p>
+
+  <h3>1. Acceptance of this Agreement</h3>
+  <p>By entering into an order form ("Order Form") with us or otherwise accessing or using the Services, you are indicating your acceptance to be bound by this Agreement and our Privacy Policy located at https://www.foranalyst/privacy-policy (the "Privacy Policy"), as it may be amended from time to time in the future. In order to enter into this Agreement, you must have reached, and represent and warrant that you have reached, the legal age of majority in your jurisdiction of residence, and be fully able and competent to enter into this Agreement. If you are entering into this Agreement on behalf of a company or other legal entity identified in an Order Form, you represent that you have the authority to bind such entity to this Agreement, in which case the terms "you" or "your" will refer to such entity. We may amend any part of this Agreement by adding, deleting, or varying its terms from time-to-time in our discretion. We will provide you with notice of the proposed amendment by posting an amended version of this Agreement. The amendments will take effect 30 days after the date on which the amended version is posted. Prior to that date, the previous version of this Agreement will continue to apply.</p>
+
+  <h3>2. Intellectual Property Right</h3>
+  
+  <h4>a. Your Content</h4>
+  <p>Subject to the terms and conditions of this Agreement, you may provide us with audio files (in .wav format or such other format as may be requested by FOR Analyst) and related data, including transcripts, of an individual's voice ("Content") for the purposes of having FOR Analyst synthesizing and generating an AI voice model using and incorporating our proprietary AI processes and voice generator software (the "AI Model"). By uploading or providing any Content to us, you grant to FOR Analyst a non-exclusive and royalty-free license to use, modify, reproduce and process, all or any portion of such Content, for the purposes set out in this Agreement. You represent and warrant that you own your Content or have the necessary licenses, rights, consents and permissions to grant the license set forth herein and that its provision to FOR Analyst or FOR Analyst's use thereof will not violate applicable laws, the copyrights, privacy rights, publicity rights, trademark rights, contract rights or any other intellectual property rights or other rights of any person or entity. FOR Analyst may require consent form the individual or third party whose voice is being cloned. Consent needs to be verbal, unless otherwise stated by FOR Analyst. You agree that FOR Analyst AI is not responsible for any violations of any third party intellectual property rights in any Content that you submit to FOR Analyst. You agree to pay all royalties, fees and any other monies owing to any person by reason of the Content uploaded, displayed or otherwise provided by you. FOR Analyst, in its sole discretion, may refuse to post, remove, or require you to remove, any Content, in whole or in part, alleged to be unacceptable, undesirable, inappropriate, or in violation of this Agreement.</p>
+
+  <h4>b. Our Materials</h4>
+  <p>Except as otherwise provided expressly in this Agreement, all right, title and interest in and to the Services, including but not limited to our proprietary AI processes and voice generator software used and/or incorporated into the AI Model, and all other materials and services provided by or through FOR Analyst, its affiliates, subsidiaries, employees, agents, licensors or other commercial partners including, but not limited to, the API, software, all informational text, software documentation, design of and "look and feel", layout, photographs, graphics, audio, video, messages, design and functions, files, documents, images, or other materials, as well as all derivative works thereof (collectively, the "FOR Analyst Materials"), are owned by us or our licensors or service providers, and are protected by copyright, trademark, trade secret and other intellectual property laws. Subject to your compliance with all of the terms and conditions of this Agreement, during the term of this Agreement, FOR Analyst grants to you a non-transferable, non-sublicensable (except with prior written approval of FOR Analyst), non-exclusive, revocable, limited-purpose right to access and use the FOR Analyst Materials that we make available to you for the purposes of this Agreement. You are not permitted to download, copy or otherwise store any FOR Analyst Materials.</p>
+
+  <h4>c. Feedback</h4>
+  <p>You agree that any ideas, suggestions, concepts, processes or techniques which you provide to FOR Analyst related to the Services ("Feedback") are and will be FOR Analyst's exclusive property without any compensation or other consideration payable to you by FOR Analyst. FOR Analyst may or may not, in its sole discretion, use or incorporate the Feedback in whatever form or derivative FOR Analyst may decide into the Services, its software, documentation, business or other products or services, or any future versions or derivatives of the foregoing. You hereby assign all rights on a worldwide basis in perpetuity to FOR Analyst in any Feedback and, as applicable, waive any moral rights.</p>
+
+  <h4>d. Retention of Data</h4>
+  <p>AI Models and your Content are subject to FOR Analyst's data retention policies and practices. Upon the termination or expiry of this Agreement, you may request FOR Analyst to destroy the AI Models and Content, in which case, FOR Analyst will delete, destroy or render anonymous any Content or AI Models in accordance with its data retention policies and practices. You acknowledge and agree that, during the course of the Services, your Content may be modified, transformed and synthesized, and FOR Analyst does not otherwise prepare or maintain any backups for your Content and that you are solely responsible for backing up any Content you provide to us. You further acknowledge and agree that our performance of the Services, including the creation of AI Models using your Content, will result in the generation of various aggregated, derivative and/or metadata that is not identifiable to you or your Content ("Aggregated Data"). FOR Analyst shall retain and own all right, title and interest in and to such Aggregated Data, which may be used for troubleshooting, bug fixes, continuous development and improvement of our services and processes, internal learning and training, delivery of support, among other things. To the extent you have any right, title and interest in Aggregated Data, you hereby assign all such right, title and interest to therein, and where applicable, waive any moral rights to the Aggregated Data.</p>
+
+  <h3>3. Your Account</h3>
+  <p>To access and use the Services, you may need to log into an account with a username and password ("Account"). You agree and understand that you are responsible for maintaining the confidentiality of your Account. You agree to provide true, accurate, current and complete information in regards to your Account. Your right to access and use the Services is personal to you and is not transferable by you to any other person or entity. You agree not to disclose your Account to any third party. You are solely responsible for all activities that occur under your Account. If you become aware of any unauthorized use of your Account, you are responsible for notifying FOR Analyst immediately.</p>
+
+  <h3>4. Fees</h3>
+  <p>Access and use of our Services require payment of applicable fees, which is set in the Order Form or on our website (the "Fees"). You agree to pay the Fees as they become due, and failure to do so may result in late fees calculated at the lesser of 1.5% per month or the highest rate permissible by applicable laws of the then-applicable Fees. Unless as otherwise set out in an Order Form, we reserve the right to modify our billing rates at any time upon 30 days written notice by posting such fee changes through the Services or otherwise through notifying you via your contact information.</p>
+
+  <h3>5. Term and Renewal</h3>
+  <p>The term of this Agreement shall commence on the effective date and continue for duration as set out on the Order Form (the "Initial Term"). At the end of the Initial Term, and except as otherwise set out in an Order Form, your subscription will automatically renew for an additional term equal to the length of the Initial Term, unless cancelled by you with 30 business days' notice ("Renewal Term," and together with the Initial Term, the "Term").</p>
+
+  <h3>6. Termination</h3>
+  <p>We have the right to terminate this Agreement by providing 30 days' notice to you. You will be responsible for any Fees owing up until the effective date of termination. Notwithstanding the foregoing, we can terminate this Agreement immediately with notice to you if you materially breach this Agreement. We reserve the right to modify, suspend or discontinue the Services, or any portion thereof, at any time and for any reason, with or without notice, including, without limitation, for periodic updating or maintenance of the Services.</p>
+
+  <h3>7. Taxes</h3>
+  <p>You agree to take full responsibility for all taxes and fees of any nature associated with the Services, including any sales tax related to any purchase or sale of services or goods under this Agreement</p>
+
+  <h3>8. Acceptable Use and Conduct</h3>
+  <p>You agree that you will not publish or make available any Content that, or use the Services or any AI Model in a manner that:</p>
+  <ul>
+    <li>infringes, violates or misappropriates any third party's intellectual property or proprietary rights;</li>
+    <li>contains software viruses, Trojan horses or any other computer code, files or programs designed to interrupt, destroy or limit the functionality of any computer software or hardware or telecommunications equipment;</li>
+    <li>is misleading, deceptive or fraudulent or otherwise illegal or promotes illegal activities, including engaging in phishing or otherwise obtaining financial or other personal information in a misleading manner or for fraudulent or misleading purposes;</li>
+    <li>is defamatory, or that is otherwise threatening, abusive, violent, harassing, malicious or harmful to any person or entity, or is invasive of another's privacy;</li>
+    <li>is harmful to or exploitative of minors in any way;</li>
+    <li>is hateful or discriminatory based on race, color, sex, religion, nationality, ethnic or national origin, marital status, disability, sexual orientation or age or is otherwise objectionable, as reasonably determined by FOR Analyst;</li>
+    <li>falsely states or otherwise misrepresents your affiliation with any person or entity;</li>
+    <li>interferes or attempts to interfere with the proper working of the Services or prevents others from using the Services, or in a manner that disrupts the normal flow of dialogue with an excessive number of messages (flooding attack), packets to the Services or calls to the API, or that otherwise negatively affects other persons' ability to use the Services;</li>
+    <li>uses any manual or automated means, including agents, robots, scripts, or spiders, to monitor or copy the Services or the content contained therein;</li>
+    <li>except as expressly permitted by FOR Analyst, licenses, sublicenses, rents or leases the Services to third parties, or uses the Services for third party training, commercial time-sharing or service bureau use;</li>
+    <li>constitutes or contains any form of advertising or solicitation to users who have requested not to be contacted about other services, products or commercial interests;</li>
+    <li>collects, uses or discloses data, including personal information, about users without their informed consent or for unlawful purposes or in violation of applicable law or regulations;</li>
+    <li>is obscene or pornographic;</li>
+    <li>decompiles or reverse engineers or attempts to access the source code of the software underlying the Services, AI Models or any other FOR Analyst Materials;</li>
+    <li>copies, archives, stores, reproduces, rearranges, modifies, downloads, uploads, creates derivate works from, displays, performs, publishes, distributes, redistributes or disseminates all or any part of the Services;</li>
+    <li>accesses the Services for the purposes of building a product using similar or competitive ideas, features, functions, interface or graphics as those in the Services;</li>
+    <li>accesses the Services for the purposes of monitoring its availability, performance or functionality, or for any other benchmarking or competitive purposes or;</li>
+    <li>accesses the Services or otherwise uses any output generated from the Services (including without limitation audio files) to train, improve, or otherwise further develop your own or any third party's product, service, or deepfake detection model</li>
+  </ul>
+
+  <h3>9. Support</h3>
+  <p>We will also use commercially reasonable efforts to provide you with support services during the hours of 9:00 am through 5:00 pm pacific time, with the exclusion of federal holidays ("Support Hours"). You may initiate a helpdesk ticket through email during Support Hours by emailing team@foranalyst, and we will endeavour to respond to tickets within one (1) business day.</p>
+
+  <h3>10. Responsible Disclosure Policy</h3>
+  <p>If you believe you've discovered a potential vulnerability, please let us know by emailing us at security@foranalyst</p>
+
+  <h3>11. Warranties and Disclaimers</h3>
+  <p>We use our proprietary AI processes, data and software applications to process your Content and endeavour to create an AI Model that reasonably replicates the tone, pitch, cadence and other aspects of the voice data provided through your Content. However, FOR Analyst does not guarantee, covenant, represent or warrant that the Services or AI Model will be error-free, be accurate, meet your needs or be fit for a particular purpose. In the event the Services or an AI Model does not meet agreed-upon specifications, your sole and exclusive remedy is for us to make commercially reasonable efforts to re-perform the Services. Your use of the Services and all content forming part of or related to the Services, including any AI Models, the Content you upload or submit or any third party materials (including any open source materials) made available to you through the Services, are at your sole responsibility and risk. Notwithstanding anything to the contrary, the Services are provided on an "as is" and "as available" basis. We expressly disclaim all representations, warranties, or conditions of any kind with respect to the Services, whether express or implied, including, but not limited to, any implied warranties or conditions of merchantability, fitness for a particular purpose, accuracy, completeness, performance, title, and non-infringement. We further disclaim any warranty the Services will be uninterrupted, timely, secure, that defects will be corrected, or that the servers that makes the Services available are free of viruses or other harmful components.</p>
+
+  <h3>12. Exclusive Remedy and Limitation of Liability</h3>
+  <p>You agree that, under no legal theory, including, but not limited to negligence, breach of warranty or condition, breach of contract or tort, will FOR Analyst or its owners, officers, directors, affiliates, contractors, employees or agents, be liable to you or any third party acting on your behalf for any indirect, incidental, special, consequential, punitive, or exemplary damages or damages for loss of profits, goodwill, use, data, or other intangible losses or the cost of any substitute equipment, facilities or services (even if we have been advised of the possibility of such damages), arising from or relating to this Agreement or your use of or your inability to the Services, or for any damages arising from or related to this Agreement. Our total aggregate liability from any and all claims under this Agreement is limited to the total amounts you paid us in the one (1) year immediately preceding the occurrence of loss or damage. To the extent any province, state or jurisdiction does not allow the exclusion or the limitation of liability for consequential or incidental damages, our liability in such province, state or jurisdiction will be limited to the furthest extent permitted by law. You further agree that the foregoing limitations will apply with respect to third party liability of any kind.</p>
+
+  <h3>13. Waiver of Jury Trial and Class Action Rights</h3>
+  <p>With respect to any dispute arising out of or related to the Services and/or this Agreement: (i) you hereby expressly give up your right to have a trial by jury; and (ii) you hereby expressly give up your right to participate as a member of a class of claimants, in any lawsuit including but not limited to class action lawsuits involving any such dispute</p>
+
+  <h3>14. Limitation of Time</h3>
+  <p>You agree that you will not bring a claim under or related to this Agreement more than 12 months from when your claim first arose.</p>
+
+  <h3>15. Indemnity</h3>
+  <p>You agree to indemnify, defend, and hold harmless FOR Analyst, and its subsidiaries, affiliates, co-branders, all third-party advertisers, technology providers, service providers or other partners, and each of their respective officers, directors, agents, shareholders, employees and representatives (together, the "Indemnified Parties"), from and against any third party claim, demand, loss, damage, cost, or liability (including, reasonable attorneys' fees) (collectively and individually, "Claims") incurred by or made against the Indemnified Parties in connection with any Claims arising out of or relating to this Agreement or the Services, including but without limitation in relation to: (a) your use, non-use or misuse of, or connection to the Services, any AI Models and any Content; (b) your violation or alleged violation of this Agreement; and (c) your violation of any applicable laws or third party rights, including intellectual property, personality or privacy rights. FOR Analyst reserves the right, at your expense, to assume the exclusive defense and control of any matter for which you are required to indemnify FOR Analyst and you agree to cooperate with FOR Analyst's defense of these Claims. You agree not to settle any matter without the prior written consent of . FOR Analyst will use reasonable efforts to notify you of any such Claims upon becoming aware of it.</p>
+
+  <h3>16. Miscellaneous</h3>
+
+  <h4>a. Jurisdiction</h4>
+  <p>If there is any dispute between you and FOR Analyst about or involving this Agreement or the Services, you hereby agree that the dispute will be governed by and construed in accordance with the laws of the Province of Ontario, Canada, and the federal laws of Canada applicable therein without regard to its conflict of law provisions. The Services are offered and controlled by us from our facilities in Canada. We make no representations that the Services are appropriate or available for use in other locations. Those who access or use the Services from other jurisdictions do so at their own volition and are responsible for compliance with local law. The United Nations Convention on Contracts for the International Sale of Goods does not apply to this Agreement.</p>
+
+  <h4>b. Assignment</h4>
+  <p>You may not assign this Agreement to a third party without our prior written consent and any assignment made in violation of this section shall be void.  We may assign this Agreement or any rights hereunder without your consent. Any assignment under this section is conditional upon the assignee agreeing in writing to be bound to the terms of this Agreement which shall be binding upon and inure to the benefit of the parties' successors and permitted assignees.</p>
+
+  <h4>c. Dispute Resolution</h4>
+  <p>Except for any claim involving the ownership of intellectual property, all disputes arising out of or in connection with this Agreement will be referred to and finally resolved by arbitration under the rules of The ADR Institute of Canada (ADRIC). The appointing authority will be ADRIC and the case will be adjudicated by a single arbitrator and will be administered by ADRIC in accordance with its rules. The place of arbitration will be Toronto, Ontario, Canada. The language of the arbitration will be English. Notwithstanding the foregoing, FOR Analyst may seek and obtain injunctive relief in any jurisdiction in any court of competent jurisdiction and you agree that this Agreement is specifically enforceable by FOR Analyst through injunctive relief and other equitable remedies without proof of monetary damages. If any portion of this Agreement is deemed unlawful, void or unenforceable by any arbitrator or court of competent jurisdiction, this Agreement as a whole will not be deemed unlawful, void or unenforceable, but only that portion of this Agreement that is unlawful, void or unenforceable will be stricken from this Agreement.</p>
+
+  <h4>d. Waiver</h4>
+  <p>You agree that if FOR Analyst does not exercise or enforce any legal right or remedy which is contained in the Agreement (or which FOR Analyst has the benefit of under any applicable law), this will not be taken to be a formal waiver of FOR Analyst's rights and that those rights or remedies will still be available to FOR Analyst.</p>
+
+  <h4>e. Survival</h4>
+  <p>Any representations and warranties you give under this Agreement shall survive any termination or expiry. In addition, the following sections will survive termination or expiry of this Agreement: 2, 7 and 10 through 15.</p>
+
+  <h4>f. Entire Agreement</h4>
+  <p>This Agreement is the entire agreement between us related to the subject matter in this Agreement. This Agreement replaces and supersedes any other prior or contemporaneous agreement, representation or discussion, oral or written, and may not be changed except in writing signed by us, regardless of whether or not the parties act under an unsigned "electronic" agreement or rely on such an unsigned agreement.</p>
+
+  <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+</div>
+
+<!-- Add this inside the info-pages div, after the other pages -->
+<div id="use-cases-page" class="info-page hidden">
+  <h2>Use Cases</h2>
+  <p>The creative possibilities for AI voice detection are endless. See how our deepfake detection technology is being used across industries to ensure audio authenticity.</p>
+  
+  <div class="faq-section">
+    <h3>Industry Applications</h3>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Gaming
+      </div>
+      <div class="faq-answer">
+        <p>Ensuring authentic voice acting in game dialogue and preventing unauthorized voice cloning of characters.</p>
+        <p><strong>Example:</strong> Verifying original voice actor recordings before integration into AAA game titles.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Audiobooks
+      </div>
+      <div class="faq-answer">
+        <p>Validating narrator authenticity and detecting AI-generated narration in audiobook production.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Webinars & Podcasts
+      </div>
+      <div class="faq-answer">
+        <p>Authenticating guest speaker audio in remote recordings and interviews.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Metaverse
+      </div>
+      <div class="faq-answer">
+        <p>Maintaining trust in virtual interactions by verifying human vs. synthetic voices.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Arts & Culture
+      </div>
+      <div class="faq-answer">
+        <p>Preserving historical voice recordings and detecting forgeries in archival materials.</p>
+        <p><strong>Example:</strong> Smithsonian audio archive verification project.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Entertainment
+      </div>
+      <div class="faq-answer">
+        <p>Protecting celebrity voice rights and detecting unauthorized voice cloning.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Fashion
+      </div>
+      <div class="faq-answer">
+        <p>Verifying authenticity of voiceovers in fashion shows and brand campaigns.</p>
+        <p><strong>Example:</strong> Brazil Immersive Fashion Week audio authentication.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Automotive
+      </div>
+      <div class="faq-answer">
+        <p>Ensuring brand-consistent voice assistants in vehicle systems.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Customer Service
+      </div>
+      <div class="faq-answer">
+        <p>Monitoring call centers for synthetic voice fraud and social engineering attempts.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Food/Hospitality
+      </div>
+      <div class="faq-answer">
+        <p>Verifying voice orders in automated food service systems.</p>
+        <p><strong>Example:</strong> ConverseNow order verification system.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Sports
+      </div>
+      <div class="faq-answer">
+        <p>Authenticating athlete voice content for fan engagement platforms.</p>
+        <p><strong>Example:</strong> Lupa Run athlete voice verification.</p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="faq-section">
+    <h3>Specific Applications</h3>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Game Dialogue Verification
+      </div>
+      <div class="faq-answer">
+        <p>Ensuring all in-game dialogue comes from authorized voice actors and hasn't been synthetically altered without permission.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Advertisement Authentication
+      </div>
+      <div class="faq-answer">
+        <p>Detecting synthetic voices in audio ads to prevent misleading endorsements.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Film Dialogue Verification
+      </div>
+      <div class="faq-answer">
+        <p>Authenticating ADR and narration in documentary and feature film production.</p>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        Real-time API Integration
+      </div>
+      <div class="faq-answer">
+        <p>Integrate our detection technology directly into your applications for real-time voice authentication.</p>
+      </div>
+    </div>
+  </div>
+  
+  <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+</div>
+
+<!-- Add this inside the info-pages div, after the other pages -->
+<div id="open-source-page" class="info-page hidden">
+  <h2>Open Source Projects</h2>
+  <p>Explore popular open source AI projects and their integration with our deepfake detection technology.</p>
+  
+  <div class="faq-section">
+    <h3>Featured Open Source AI Projects</h3>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        <img src="https://via.placeholder.com/100x30?text=StabilityAI" alt="Stability AI Logo" style="vertical-align: middle; margin-right: 10px;">
+        StableLM
+      </div>
+      <div class="faq-answer">
+        <p>StableLM is an open-source language model that aims to provide an efficient, transparent, and accessible foundation for AI technology.</p>
+        <p><strong>Integration:</strong> Our detection API can analyze outputs from StableLM for synthetic voice patterns.</p>
+        <a href="https://stability.ai/" target="_blank" class="link">Learn more</a>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        <img src="https://via.placeholder.com/100x30?text=BabyAGI" alt="BabyAGI Logo" style="vertical-align: middle; margin-right: 10px;">
+        BabyAGI
+      </div>
+      <div class="faq-answer">
+        <p>BabyAGI is an open-source project on GitHub designed to develop Artificial General Intelligence (AGI) by training agents in a simulation environment.</p>
+        <p><strong>Integration:</strong> Can be combined with our detection tools to verify agent communications.</p>
+        <a href="https://github.com/yoheinakajima/babyagi" target="_blank" class="link">Learn more</a>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        <img src="https://via.placeholder.com/100x30?text=AutoGPT" alt="AutoGPT Logo" style="vertical-align: middle; margin-right: 10px;">
+        AutoGPT
+      </div>
+      <div class="faq-answer">
+        <p>Auto-GPT is an experimental open-source application showcasing the capabilities of the GPT-4 language model.</p>
+        <p><strong>Integration:</strong> Our API can analyze AutoGPT's voice outputs for authenticity.</p>
+        <a href="https://github.com/Significant-Gravitas/Auto-GPT" target="_blank" class="link">Learn more</a>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        <img src="https://via.placeholder.com/100x30?text=DeepPavlov" alt="DeepPavlov Logo" style="vertical-align: middle; margin-right: 10px;">
+        DeepPavlov
+      </div>
+      <div class="faq-answer">
+        <p>DeepPavlov is an open-source conversational AI framework that provides tools and components for developing chatbots, virtual assistants, and other conversational agents.</p>
+        <p><strong>Integration:</strong> Our detection models can be added to DeepPavlov pipelines.</p>
+        <a href="https://deeppavlov.ai/" target="_blank" class="link">Learn more</a>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        <img src="https://via.placeholder.com/100x30?text=PaddleNLP" alt="PaddleNLP Logo" style="vertical-align: middle; margin-right: 10px;">
+        PaddleNLP
+      </div>
+      <div class="faq-answer">
+        <p>Built on top of the PaddlePaddle deep learning framework, PaddleNLP is an open-source natural language processing (NLP) toolkit.</p>
+        <p><strong>Integration:</strong> Compatible with our text analysis models for detecting synthetic patterns.</p>
+        <a href="https://github.com/PaddlePaddle/PaddleNLP" target="_blank" class="link">Learn more</a>
+      </div>
+    </div>
+    
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaqAnswer(this)">
+        <img src="https://via.placeholder.com/100x30?text=FauxPilot" alt="FauxPilot Logo" style="vertical-align: middle; margin-right: 10px;">
+        FauxPilot
+      </div>
+      <div class="faq-answer">
+        <p>FauxPilot developed by Montreal-based Automat is an open-source platform for training AI-powered chatbots using conversation logs.</p>
+        <p><strong>Integration:</strong> Our detection API can monitor FauxPilot outputs for synthetic voice patterns.</p>
+        <a href="https://github.com/fauxpilot/fauxpilot" target="_blank" class="link">Learn more</a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="faq-section">
+    <h3>Developer Friendly API</h3>
+    <div class="card" style="max-width: 100%;">
+      <h4>Integrating speech analysis within your application has never been easier</h4>
+      <p>Create content in realtime with our RESTful API. Rapidly build production-ready integrations with modern tools.</p>
+      <p>Use our API to:</p>
+      <ul>
+        <li>Fetch existing content analysis</li>
+        <li>Create new detection requests</li>
+        <li>Build custom verification workflows</li>
+        <li>Integrate with open source projects</li>
+      </ul>
+      <button onclick="showInfoPage('api-docs')" style="margin-top: 20px;">View API Documentation</button>
+    </div>
+  </div>
+  
+  <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+</div>
+
+<!-- Add this inside the info-pages div -->
+<div id="blog-page" class="info-page hidden">
+  <h2>FOR Analyst Blog – Learn All About AI Voices</h2>
+  
+  <div id="blog-posts-container">
+    <!-- Blog posts will be loaded here -->
+  </div>
+
+  <div id="admin-blog-controls" class="hidden" style="margin-top: 40px;">
+    <h3>Admin Controls</h3>
+    <div class="card">
+      <h4>Add New Blog Post</h4>
+      <input type="text" id="new-post-title" placeholder="Post Title" style="margin-bottom: 15px;">
+      <input type="text" id="new-post-date" placeholder="Post Date (e.g. Mar 5, 2025)" style="margin-bottom: 15px;">
+      <textarea id="new-post-content" placeholder="Post content (supports HTML)" rows="6" style="width: 100%; margin-bottom: 15px; padding: 10px;"></textarea>
+      <button onclick="addNewBlogPost()">Publish Post</button>
+    </div>
+  </div>
+
+  <a href="javascript:void(0)" onclick="hideInfoPage()" class="back-btn">Back to Main Site</a>
+</div>
+
+    <!-- Additional pages can be added here following the same pattern -->
+  </div>
+
+  <div id="toast"></div>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <h4>SUPPORT</h4>
+        <ul>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('knowledge-base')">Knowledge Base</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('faq')">FAQ</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('privacy-policy')">Privacy Policy</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('terms')">Terms of Service</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>PLATFORM</h4>
+        <ul>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('ai-detection')">AI Detection</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('voice-analysis')">Voice Analysis</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('speech-verification')">Speech Verification</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('use-cases')">Use Cases</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>DEVELOPERS</h4>
+        <ul>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('api-docs')">API Documentation</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('integration-guides')">Integration Guides</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('open-source')">Open Source</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('sdks')">SDKs</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>COMPANY</h4>
+        <ul>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('about-us')">About Us</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('blog')">Blog</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('careers')">Careers</a></li>
+          <li><a href="javascript:void(0)" onclick="showInfoPage('contact')">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Initialize local storage
+    if (!localStorage.getItem('users')) {
+      localStorage.setItem("users", JSON.stringify([
+        { username: "admin", password: "Admin@123", role: "admin" },
+        { username: "user1", password: "User@123", role: "user" }
+      ]));
+    }
+    
+    if (!localStorage.getItem('submissions')) {
+      localStorage.setItem("submissions", JSON.stringify([]));
+    }
+
+    let currentUser = null;
+
+    // DOM Loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      setupFileDrop('deepfakeDropZone', 'deepfakeFile', 'deepfakePreview');
+      setupFileDrop('originalDropZone', 'originalFiles', 'originalPreview');
+      
+      // Password toggle
+      document.getElementById('togglePassword').addEventListener('click', function() {
+        const passInput = document.getElementById('loginPass');
+        passInput.type = passInput.type === 'password' ? 'text' : 'password';
+      });
+      
+      document.getElementById('toggleNewPassword').addEventListener('click', function() {
+        const passInput = document.getElementById('newPass');
+        passInput.type = passInput.type === 'password' ? 'text' : 'password';
+      });
+      
+      // Password strength
+      document.getElementById('newPass').addEventListener('input', function() {
+        checkPasswordStrength(this.value);
+      });
+      
+      showPage('home');
+    });
+
+    // Page Navigation
+    function showPage(id) {
+      document.querySelectorAll('.container').forEach(el => el.classList.add('hidden'));
+      document.getElementById(id).classList.remove('hidden');
+      document.getElementById('info-pages').style.display = 'none';
+      updateNavbar();
+      
+      if (id === 'dashboard' && currentUser) {
+        loadDashboard();
+      }
+    }
+    function showInfoPage(pageId) {
+  // Hide all containers first
+  document.querySelectorAll('.container').forEach(el => el.classList.add('hidden'));
+  document.getElementById('info-pages').style.display = 'block';
+  
+  // Hide all info pages
+  document.querySelectorAll('.info-page').forEach(el => el.classList.add('hidden'));
+  
+  // Show the requested page
+  document.getElementById(`${pageId}-page`).classList.remove('hidden');
+  
+  // Special handling for blog page
+  if (pageId === 'blog') {
+    loadBlogPosts();
+  }
+  
+  // Scroll to top
+  window.scrollTo(0, 0);
+}
+
+    function updateNavbar() {
+      const nav = document.getElementById("nav-links");
+      nav.innerHTML = `
+        <a onclick="showPage('home')">Home</a>
+        <a onclick="showInfoPage('about-us')">About</a>
+        ${currentUser ? '<a onclick="showPage(\'dashboard\')">Dashboard</a><a onclick="logout()">Logout</a>' : '<a onclick="showPage(\'signup\')">Sign Up</a>'}
+        <a onclick="showInfoPage('contact')">Contact</a>
+      `;
+    }
+
+  // knowledge base
+    function hideInfoPage() {
+      document.getElementById('info-pages').style.display = 'none';
+      showPage('home');
+    }
+    function toggleFaqAnswer(element) {
+  const answer = element.nextElementSibling;
+  answer.classList.toggle('show');
+  
+  // Close other open answers in the same section
+  const parentSection = element.closest('.faq-section');
+  parentSection.querySelectorAll('.faq-answer').forEach(item => {
+    if (item !== answer && item.classList.contains('show')) {
+      item.classList.remove('show');
+    }
+  });
+}
+// Blog Functions
+function loadBlogPosts() {
+  const posts = JSON.parse(localStorage.getItem('blogPosts') || '[]');
+  const container = document.getElementById('blog-posts-container');
+  container.innerHTML = '';
+
+  if (posts.length === 0) {
+    container.innerHTML = '<div class="blog-post"><p>No blog posts yet. Check back soon!</p></div>';
+    if (currentUser && currentUser.role === 'admin') {
+      loadSampleBlogPosts();
+      return;
+    }
+    return;
+  }
+
+  posts.forEach((post, index) => {
+    const postEl = document.createElement('div');
+    postEl.className = 'blog-post';
+    
+    // Format the content with paragraphs if it contains newlines
+    let formattedContent = post.content;
+    if (post.content.includes('\n')) {
+      formattedContent = post.content.split('\n')
+        .filter(para => para.trim().length > 0)
+        .map(para => `<p>${para}</p>`)
+        .join('');
+    }
+    
+    postEl.innerHTML = `
+      <h3 class="post-title">${post.title}</h3>
+      <div class="post-date">${post.date}</div>
+      <div class="post-content">${formattedContent}</div>
+      ${currentUser && currentUser.role === 'admin' ? 
+        `<div class="blog-post-actions">
+          <button class="edit-post-btn" onclick="editBlogPost(${index})">Edit</button>
+          <button class="delete-post-btn" onclick="deleteBlogPost(${index})">Delete</button>
+        </div>` : ''}
+    `;
+    container.appendChild(postEl);
+  });
+
+  if (currentUser && currentUser.role === 'admin') {
+    document.getElementById('admin-blog-controls').classList.remove('hidden');
+  } else {
+    document.getElementById('admin-blog-controls').classList.add('hidden');
+  }
+
+  // Show admin controls if admin is logged in
+  if (currentUser && currentUser.role === 'admin') {
+    document.getElementById('admin-blog-controls').classList.remove('hidden');
+  } else {
+    document.getElementById('admin-blog-controls').classList.add('hidden');
+  }
+}
+
+function loadSampleBlogPosts() {
+  const samplePosts = [
+    {
+      title: "Voice Design: Transforming Text into Unlimited AI Voices",
+      date: "Mar 5, 2025",
+      content: `Today, we're thrilled to unveil Voice Design, our most groundbreaking feature yet. Voice Design represents a fundamental shift in how creators approach voice generation by translating simple text descriptions into fully-realized AI voices in seconds.
+
+The Power of Voice Design lies in its ability to understand nuanced descriptions like "a warm, grandmotherly voice with a slight Southern accent" or "a young, energetic tech-savvy voice with British inflection" and instantly generate matching vocal personas.
+
+Key benefits include:
+- Instant voice prototyping
+- Unprecedented creative control
+- Localization made simple
+- Consistent character voices across projects
+
+We can't wait to see how you'll use this technology to bring your stories and projects to life!`
+    },
+    {
+      title: "Rapid Voice Cloning 2.0: New Voice Cloning Model with Unmatched Accuracy",
+      date: "Feb 25, 2025",
+      content: `Today, FOR Analyst announced its latest breakthrough model, Rapid Voice Clone 2.0, enabling users to generate high-quality voice content with just 20 seconds of audio. This powerful tool allows seamless voice generation, editing, and localization, empowering users to:
+
+1. Create natural-sounding voice clones faster than ever
+2. Edit spoken content by simply editing text
+3. Localize content into multiple languages while preserving the original voice characteristics
+
+The new model features:
+• 40% faster processing
+• 30% improved accuracy
+• Support for 15 additional languages
+• Enhanced emotional range capabilities
+
+This advancement represents a significant leap forward in making voice cloning technology more accessible and practical for businesses and creators worldwide.`
+    }
+  ];
+  
+  localStorage.setItem('blogPosts', JSON.stringify(samplePosts));
+  loadBlogPosts();
+}
+
+function addNewBlogPost() {
+  const title = document.getElementById('new-post-title').value;
+  const date = document.getElementById('new-post-date').value;
+  const content = document.getElementById('new-post-content').value;
+
+  if (!title || !date || !content) {
+    showToast("Please fill all fields", "error");
+    return;
+  }
+
+  const posts = JSON.parse(localStorage.getItem('blogPosts') || []);
+  posts.unshift({
+    title,
+    date,
+    content
+  });
+
+  localStorage.setItem('blogPosts', JSON.stringify(posts));
+  
+  // Clear form
+  document.getElementById('new-post-title').value = '';
+  document.getElementById('new-post-date').value = '';
+  document.getElementById('new-post-content').value = '';
+  
+  loadBlogPosts();
+  showToast("Blog post published successfully");
+}
+
+function editBlogPost(index) {
+  const posts = JSON.parse(localStorage.getItem('blogPosts'));
+  const post = posts[index];
+  
+  // Fill the form with existing values
+  document.getElementById('new-post-title').value = post.title;
+  document.getElementById('new-post-date').value = post.date;
+  document.getElementById('new-post-content').value = post.content;
+  
+  // Remove the old post
+  posts.splice(index, 1);
+  localStorage.setItem('blogPosts', JSON.stringify(posts));
+  
+  // Scroll to form
+  document.getElementById('admin-blog-controls').scrollIntoView();
+}
+
+function deleteBlogPost(index) {
+  if (!confirm("Are you sure you want to delete this blog post?")) return;
+  
+  const posts = JSON.parse(localStorage.getItem('blogPosts'));
+  posts.splice(index, 1);
+  localStorage.setItem('blogPosts', JSON.stringify(posts));
+  loadBlogPosts();
+  showToast("Blog post deleted");
+}
+
+    // Auth Functions
+  // Add this to your existing JavaScript
+function checkPasswordStrength(password) {
+  const strengthBar = document.getElementById("passwordStrengthBar");
+  const rules = document.getElementById("passwordRules");
+  const lengthRule = document.getElementById("rule-length");
+  const upperRule = document.getElementById("rule-upper");
+  const numberRule = document.getElementById("rule-number");
+  const specialRule = document.getElementById("rule-special");
+  
+  // Check each requirement
+  const hasLength = password.length >= 8;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  
+  // Update rule indicators
+  lengthRule.style.color = hasLength ? "var(--success)" : "var(--danger)";
+  upperRule.style.color = hasUpper ? "var(--success)" : "var(--danger)";
+  numberRule.style.color = hasNumber ? "var(--success)" : "var(--danger)";
+  specialRule.style.color = hasSpecial ? "var(--success)" : "var(--danger)";
+  
+  // Calculate strength
+  let strength = 0;
+  if (hasLength) strength += 25;
+  if (hasUpper) strength += 25;
+  if (hasNumber) strength += 25;
+  if (hasSpecial) strength += 25;
+  
+  strengthBar.style.width = `${strength}%`;
+  
+  // Set color based on strength
+  if (strength < 50) {
+    strengthBar.style.background = "var(--danger)";
+  } else if (strength < 75) {
+    strengthBar.style.background = "var(--warning)";
+  } else {
+    strengthBar.style.background = "var(--success)";
+  }
+  
+  // Show rules if password field has content
+  rules.style.display = password.length > 0 ? "block" : "none";
+  
+  return strength === 100;
+}
+
+function validatePassword(password) {
+  return password.length >= 8 && 
+         /[A-Z]/.test(password) && 
+         /[0-9]/.test(password) && 
+         /[^A-Za-z0-9]/.test(password);
+}
+
+function register() {
+  const user = document.getElementById('newUser').value.trim();
+  const pass = document.getElementById('newPass').value;
+  const confirmPass = document.getElementById('confirmPass').value;
+  const email = document.getElementById('newEmail').value.trim();
+  const users = JSON.parse(localStorage.getItem("users"));
+  const msgEl = document.getElementById("signupMsg");
+  
+  // Clear previous messages
+  msgEl.textContent = "";
+  msgEl.style.display = "none";
+  msgEl.className = "";
+  
+  // Validate fields
+  if (!user || !pass || !confirmPass || !email) {
+    showMessage(msgEl, "Please fill all fields.", "error");
+    return;
+  }
+  
+  if (user.length < 4) {
+    showMessage(msgEl, "Username must be at least 4 characters.", "error");
+    return;
+  }
+  
+  if (pass !== confirmPass) {
+    showMessage(msgEl, "Passwords do not match.", "error");
+    return;
+  }
+  
+  if (!validatePassword(pass)) {
+    showMessage(msgEl, "Password does not meet requirements.", "error");
+    return;
+  }
+
+  if (!validateEmail(email)) {
+    showMessage(msgEl, "Please enter a valid email address.", "error");
+    return;
+  }
+
+  if (users.find(u => u.username === user)) {
+    showMessage(msgEl, "Username already exists.", "error");
+    return;
+  }
+  
+  // Save user
+  const newUser = { 
+    username: user, 
+    password: pass,
+    email: email,
+    role: "user",
+    signupDate: new Date().toISOString(),
+    lastLogin: null,
+    active: true
+  };
+  
+  users.push(newUser);
+  localStorage.setItem("users", JSON.stringify(users));
+  
+  // Show success message
+  showMessage(msgEl, "Thank you for signing up! Welcome to FOR Analyst", "success");
+  
+  // Disable signup button to prevent multiple submissions
+  document.getElementById('signupBtn').disabled = true;
+  
+  // Redirect to login after 2 seconds
+  setTimeout(() => {
+    // Clear form
+    document.getElementById('newUser').value = '';
+    document.getElementById('newPass').value = '';
+    document.getElementById('confirmPass').value = '';
+    document.getElementById('newEmail').value = '';
+    document.getElementById('passwordStrengthBar').style.width = '0%';
+    document.getElementById('passwordRules').style.display = 'none';
+    document.getElementById('signupBtn').disabled = false;
+    
+    // Redirect to login
+    showPage('login');
+  }, 2000);
+}
+
+function showMessage(element, message, type) {
+  element.textContent = message;
+  element.style.display = "block";
+  element.className = type === "error" ? "error-message" : "success-message";
+}
+
+// Add this to your DOMContentLoaded event listener
+document.getElementById('newPass').addEventListener('input', function() {
+  checkPasswordStrength(this.value);
+});
+
+document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+  const passInput = document.getElementById('confirmPass');
+  passInput.type = passInput.type === 'password' ? 'text' : 'password';
+});
+
+    function login() {
+      const user = document.getElementById('loginUser').value.trim();
+      const pass = document.getElementById('loginPass').value;
+      const users = JSON.parse(localStorage.getItem("users"));
+      const found = users.find(u => u.username === user && u.password === pass);
+      
+      if (found) {
+        currentUser = found;
+        document.getElementById("loginMsg").textContent = "";
+        showPage('dashboard');
+        showToast(`Welcome back, ${user}!`);
+      } else {
+        document.getElementById("loginMsg").textContent = "Invalid credentials.";
+      }
+    }
+
+    function logout() {
+      currentUser = null;
+      showPage('home');
+      showToast("Logged out successfully");
+    }
+
+    function validateEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+function sendResetLink() {
+  const email = document.getElementById('resetEmail').value.trim();
+  const users = JSON.parse(localStorage.getItem("users"));
+  const msgEl = document.getElementById("resetMsg");
+  
+  if (!email) {
+    msgEl.textContent = "Please enter your email address.";
+    msgEl.style.color = "var(--danger)";
+    return;
+  }
+  
+  const user = users.find(u => u.email === email);
+  
+  if (user) {
+    // In a real app, you would send an email here
+    // For demo, we'll just show a message
+    msgEl.textContent = "Password reset link sent to your email (simulated for demo)";
+    msgEl.style.color = "var(--success)";
+    
+    // Generate and store a reset token (simplified for demo)
+    const resetTokens = JSON.parse(localStorage.getItem("resetTokens") || {});
+    const token = Math.random().toString(36).substring(2, 15);
+    resetTokens[token] = {
+      email: email,
+      expires: Date.now() + 3600000 // 1 hour from now
+    };
+    localStorage.setItem("resetTokens", JSON.stringify(resetTokens));
+    
+  } else {
+    msgEl.textContent = "No account found with that email address.";
+    msgEl.style.color = "var(--danger)";
+  }
+}
+
+    // Dashboard Functions
+    function loadDashboard() {
+      const role = currentUser.role;
+      document.getElementById("userRole").textContent = `${currentUser.username} (${role})`;
+      
+      if (role === "admin") {
+        document.getElementById("adminPanel").classList.remove("hidden");
+        loadUserList();
+      } else {
+        document.getElementById("adminPanel").classList.add("hidden");
+      }
+      
+      loadRecentSubmissions();
+    }
+
+    function loadUserList() {
+      const users = JSON.parse(localStorage.getItem("users"));
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+      
+      users.forEach(u => {
+        list.innerHTML += `
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 12px;">${u.username}</td>
+            <td style="padding: 12px;">${u.role}</td>
+            <td style="padding: 12px;">
+              ${u.role !== 'admin' ? `<button onclick="deleteUser('${u.username}')" style="padding: 5px 10px; background: var(--danger); font-size: 12px;">Delete</button>` : 'Admin'}
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function deleteUser(username) {
+      if (username === currentUser.username) {
+        showToast("Cannot delete your own account", "error");
+        return;
+      }
+      
+      const users = JSON.parse(localStorage.getItem("users"));
+      const updatedUsers = users.filter(u => u.username !== username);
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      loadUserList();
+      showToast(`User ${username} deleted`);
+    }
+
+    function loadRecentSubmissions() {
+      const submissions = JSON.parse(localStorage.getItem("submissions"));
+      const userSubmissions = submissions.filter(s => s.user === currentUser.username);
+      
+      if (userSubmissions.length > 0) {
+        const resultBox = document.getElementById("resultBox");
+        resultBox.innerHTML = `<h3>Recent Analyses</h3>`;
+        
+        userSubmissions.slice(0, 3).forEach(sub => {
+          resultBox.innerHTML += `
+            <div style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+              <p><strong>File:</strong> ${sub.fileName}</p>
+              <p><strong>Date:</strong> ${new Date(sub.date).toLocaleString()}</p>
+              <p><strong>Result:</strong> <span class="${sub.result === 'Real' ? 'result-real' : 'result-fake'}">${sub.result}</span></p>
+              <p><strong>Confidence:</strong> ${sub.confidence}%</p>
+            </div>
+          `;
+        });
+      }
+    }
+
+    // File Handling
+    function setupFileDrop(zoneId, inputId, previewId) {
+      const dropZone = document.getElementById(zoneId);
+      const fileInput = document.getElementById(inputId);
+      const preview = document.getElementById(previewId);
+
+      dropZone.addEventListener('click', () => fileInput.click());
+      
+      fileInput.addEventListener('change', (e) => {
+        if (fileInput.files.length) {
+          updatePreview(fileInput.files, preview, inputId === 'deepfakeFile');
+        }
+      });
+
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+      });
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+      });
+
+      dropZone.addEventListener('drop', handleDrop, false);
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      function highlight() {
+        dropZone.classList.add('drop-zone--over');
+      }
+
+      function unhighlight() {
+        dropZone.classList.remove('drop-zone--over');
+      }
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        fileInput.files = files;
+        updatePreview(files, preview, inputId === 'deepfakeFile');
+      }
+
+      function updatePreview(files, previewElement, isSingle) {
+        if (isSingle) {
+          const file = files[0];
+          previewElement.innerHTML = `
+            <div class="file-info">
+              <p><strong>File:</strong> ${file.name}</p>
+              <p><strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB</p>
+              <p><strong>Type:</strong> ${file.type || 'audio/*'}</p>
+            </div>
+          `;
+        } else {
+          previewElement.innerHTML = '<strong>Selected files:</strong>';
+          Array.from(files).slice(0, 5).forEach(file => {
+            previewElement.innerHTML += `
+              <div class="file-info" style="margin-top: 10px;">
+                <p>• ${file.name} (${(file.size / 1024).toFixed(2)} KB)</p>
+              </div>
+            `;
+          });
+          
+          if (files.length > 5) {
+            previewElement.innerHTML += `<p style="color: var(--warning);">Only first 5 files will be processed</p>`;
+          }
+        }
+      }
+    }
+
+    function analyzeFiles() {
+      const fakeFile = document.getElementById("deepfakeFile").files[0];
+      const originalFiles = document.getElementById("originalFiles").files;
+
+      if (!fakeFile) {
+        showToast("Please upload a deepfake audio file", "error");
+        return;
+      }
+      
+      if (originalFiles.length === 0 || originalFiles.length > 5) {
+        showToast("Please upload 1-5 original audio files", "error");
+        return;
+      }
+
+      const progressContainer = document.getElementById("progressContainer");
+      const progressBar = document.getElementById("progressBar");
+      const resultBox = document.getElementById("resultBox");
+      
+      resultBox.innerHTML = '';
+      progressContainer.classList.remove('hidden');
+      
+      // Simulate analysis progress
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 10;
+        if (progress > 100) progress = 100;
+        progressBar.style.width = `${progress}%`;
+        
+        if (progress === 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            progressContainer.classList.add('hidden');
+            showAnalysisResult(fakeFile.name);
+          }, 500);
+        }
+      }, 300);
+    }
+
+    function showAnalysisResult(filename) {
+      const resultBox = document.getElementById("resultBox");
+      const isFake = Math.random() > 0.3; // 70% chance of being fake for demo
+      const confidence = (Math.random() * 30 + 70).toFixed(1); // 70-100% confidence
+      
+      // Save submission
+      const submissions = JSON.parse(localStorage.getItem("submissions"));
+      submissions.push({
+        user: currentUser.username,
+        fileName: filename,
+        date: new Date().toISOString(),
+        result: isFake ? "Fake" : "Real",
+        confidence: confidence
+      });
+      localStorage.setItem("submissions", JSON.stringify(submissions));
+      
+      // Display result
+      resultBox.innerHTML = `
+        <h3>Analysis Result</h3>
+        <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+          <p><strong>File analyzed:</strong> ${filename}</p>
+          <p><strong>Result:</strong> 
+            <span class="${isFake ? 'result-fake' : 'result-real'}"style="font-weight: bold;">
+              ${isFake ? 'DEEPFAKE DETECTED' : 'AUTHENTIC AUDIO'}
+            </span>
+          </p>
+          <p><strong>Confidence:</strong> ${confidence}%</p>
+          <p><strong>Analysis date:</strong> ${new Date().toLocaleString()}</p>
+        </div>
+        
+        <h4>Detailed Analysis</h4>
+        <ul style="text-align: left; margin: 15px 0;">
+          <li>${isFake ? 'Detected artificial voice patterns' : 'Natural voice patterns detected'}</li>
+          <li>${isFake ? 'Inconsistencies in spectral features' : 'Consistent spectral features'}</li>
+          <li>${isFake ? 'Abnormal micro-timing variations' : 'Normal speech rhythm'}</li>
+        </ul>
+      `;
+      
+      showToast(`Analysis complete for ${filename}`);
+    }
+
+    // Utility Functions
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.style.display = "block";
+      toast.style.background = type === "error" ? "var(--danger)" : "var(--dark)";
+      
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 3000);
+    }
+
+    function checkPasswordStrength(password) {
+      const strengthBar = document.getElementById("passwordStrengthBar");
+      let strength = 0;
+      
+      if (password.length > 7) strength += 25;
+      if (password.match(/[A-Z]/)) strength += 25;
+      if (password.match(/[0-9]/)) strength += 25;
+      if (password.match(/[^A-Za-z0-9]/)) strength += 25;
+      
+      strengthBar.style.width = `${strength}%`;
+      
+      if (strength < 50) {
+        strengthBar.style.background = "var(--danger)";
+      } else if (strength < 75) {
+        strengthBar.style.background = "var(--warning)";
+      } else {
+        strengthBar.style.background = "var(--success)";
+      }
+    }
+  </script>
+</body>
+</html>
