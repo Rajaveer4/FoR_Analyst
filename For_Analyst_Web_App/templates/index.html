@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoR Analyst</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --secondary: #1d4ed8;
+      --dark: #1e293b;
+      --light: #f8fafc;
+      --gray: #64748b;
+      --danger: #dc2626;
+      --success: #16a34a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-image: url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=10');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      position: relative;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(30, 41, 59, 0.7);
+      z-index: -1;
+    }
+
+    /* Header Styles */
+    header {
+      background-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 1rem 2rem;
+      backdrop-filter: blur(5px);
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--dark);
+      font-weight: 500;
+      transition: all 0.3s;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+      background-color: rgba(37, 99, 235, 0.1);
+      transform: translateY(-2px);
+    }
+
+    /* Main Content Styles */
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 1rem;
+      padding: 3rem;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: transform 0.3s;
+    }
+
+    .hero:hover {
+      transform: translateY(-5px);
+    }
+
+    .hero h1 {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      color: var(--dark);
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--gray);
+      margin-bottom: 2rem;
+      font-size: 1.2rem;
+    }
+
+    .btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn:hover {
+      background-color: var(--secondary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Auth Container Styles */
+    .auth-container {
+      background-color: rgba(255, 255, 255, 0.85);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      max-width: 500px;
+      margin: 0 auto;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: transform 0.3s;
+    }
+
+    .auth-container:hover {
+      transform: translateY(-5px);
+    }
+
+    .auth-container h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+      font-size: 1.8rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--dark);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      background-color: rgba(255, 255, 255, 0.8);
+      transition: all 0.3s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+      background-color: white;
+    }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: var(--gray);
+    }
+
+    .auth-footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Dashboard Styles */
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-avatar {
+      width: 50px;
+      height: 50px;
+      background-color: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Upload Area Styles */
+    .upload-area {
+      border: 2px dashed rgba(203, 213, 225, 0.7);
+      border-radius: 1rem;
+      padding: 3rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 2rem;
+      background-color: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(5px);
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary);
+      background-color: rgba(37, 99, 235, 0.05);
+      transform: translateY(-3px);
+    }
+
+    .upload-area i {
+      font-size: 3rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      transition: transform 0.3s;
+    }
+
+    .upload-area:hover i {
+      transform: scale(1.1);
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    .filename {
+      margin-top: 1rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* Result Styles */
+    #result {
+      margin-top: 2rem;
+      padding: 2rem;
+      border-radius: 1rem;
+      text-align: center;
+      opacity: 0;
+      transition: all 0.5s;
+      font-size: 1.1rem;
+    }
+
+    .real {
+      background-color: rgba(22, 163, 74, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(22, 163, 74, 0.3);
+    }
+
+    .fake {
+      background-color: rgba(220, 38, 38, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(220, 38, 38, 0.3);
+    }
+
+    /* Footer Styles */
+    footer {
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 3rem 2rem;
+      margin-top: 3rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(5px);
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .footer-column {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .footer-column h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--dark);
+      position: relative;
+      padding-bottom: 0.5rem;
+    }
+
+    .footer-column h3::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 50px;
+      height: 3px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      border-radius: 3px;
+    }
+
+    .footer-column ul {
+      list-style: none;
+    }
+
+    .footer-column li {
+      margin-bottom: 0.8rem;
+    }
+
+    .footer-column a {
+      text-decoration: none;
+      color: var(--gray);
+      transition: all 0.3s;
+      display: inline-block;
+    }
+
+    .footer-column a:hover {
+      color: var(--primary);
+      transform: translateX(5px);
+    }
+
+    /* Utility Classes */
+    .hidden {
+      display: none;
+    }
+
+    /* Loading Spinner */
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 2rem 0;
+    }
+
+    .loading-spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 4px solid var(--primary);
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .nav-links {
+        width: 100%;
+        justify-content: space-between;
+        gap: 0.5rem;
+      }
+      
+      .hero h1 {
+        font-size: 2rem;
+      }
+      
+      .footer-content {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <nav class="navbar">
+      <div class="logo">FoR Analyst</div>
+      <div class="nav-links" id="mainNav">
+        <a href="#" id="homeLink">Home</a>
+        <a href="#">About</a>
+        <a href="#" id="signupNavLink">Sign Up</a>
+        <a href="#">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Login Page -->
+    <div class="auth-container" id="loginPage">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginUsername">Username</label>
+          <input type="text" id="loginUsername" placeholder="Enter your username" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" required>
+        </div>
+        <button type="submit" class="btn">Login</button>
+      </form>
+      <div class="auth-footer">
+        New user? <a href="#" id="signupLink">Sign up here</a>
+      </div>
+    </div>
+
+    <!-- Signup Page (Hidden by default) -->
+    <div class="auth-container hidden" id="signupPage">
+      <h2>Sign Up</h2>
+      <form id="signupForm">
+        <div class="form-group">
+          <label for="signupName">Full Name</label>
+          <input type="text" id="signupName" placeholder="Enter your name" required>
+        </div>
+        <div class="form-group">
+          <label for="signupEmail">Email</label>
+          <input type="email" id="signupEmail" placeholder="Enter your email" required>
+        </div>
+        <div class="form-group">
+          <label for="signupPassword">Password</label>
+          <input type="password" id="signupPassword" placeholder="Create a password" required>
+        </div>
+        <button type="submit" class="btn">Create Account</button>
+      </form>
+      <div class="auth-footer">
+        Already have an account? <a href="#" id="loginLink">Log in</a>
+      </div>
+    </div>
+
+    <!-- Dashboard Page (Hidden by default) -->
+    <div class="hidden" id="dashboardPage">
+      <div class="dashboard-header">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">U</div>
+          <div>
+            <h3 id="userName">User</h3>
+          </div>
+        </div>
+        <a href="#" class="btn" id="logoutBtn">Logout</a>
+      </div>
+
+      <div class="hero">
+        <h1>Welcome to FoR Analyst</h1>
+        <p>Upload and verify the authenticity of audio files using AI</p>
+        <button class="btn" id="getStartedBtn">Get Started</button>
+      </div>
+
+      <div id="uploadSection" class="hidden">
+        <div class="upload-area" id="uploadArea">
+          <i class="fas fa-microphone-alt"></i>
+          <p>Drag & drop audio file here or click to browse</p>
+          <p class="filename" id="filename"></p>
+          <input type="file" id="fileInput" name="file" accept=".wav" required>
+        </div>
+
+        <form id="uploadForm" enctype="multipart/form-data" method="POST" action="/predict">
+          <input type="file" id="hiddenFileInput" name="file" accept=".wav" hidden required>
+          <button type="submit" class="btn" id="analyzeBtn" disabled>Analyze Audio</button>
+        </form>
+
+        <div class="loading" id="loading">
+          <div class="loading-spinner"></div>
+          <p>Analyzing audio patterns...</p>
+        </div>
+
+        <div id="result"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-column">
+        <h3>SUPPORT</h3>
+        <ul>
+          <li><a href="#">Knowledge Base</a></li>
+          <li><a href="#">FAQ</a></li>
+          <li><a href="#">Contact Us</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h3>DEVELOPERS</h3>
+        <ul>
+          <li><a href="#">Rohan Aware</a></li>
+          <li><a href="#">Prajakta Sonawane</a></li>
+          <li><a href="#">Shruti Walunj</a></li>
+          <li><a href="#">Rajaveer Patil</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h3>CONNECT</h3>
+        <ul>
+          <li><a href="#"><i class="fab fa-github"></i> GitHub</a></li>
+          <li><a href="#"><i class="fab fa-twitter"></i> Twitter</a></li>
+          <li><a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a></li>
+          <li><a href="#"><i class="fas fa-envelope"></i> Email</a></li>
+        </ul>
+      </div>
+    </div>
+    <div style="text-align: center; margin-top: 2rem; color: var(--gray);">
+      &copy; 2023 FoR Analyst. All rights reserved.
+    </div>
+  </footer>
+
+  <script>
+    // DOM Elements
+    const loginPage = document.getElementById('loginPage');
+    const signupPage = document.getElementById('signupPage');
+    const dashboardPage = document.getElementById('dashboardPage');
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const signupLink = document.getElementById('signupLink');
+    const loginLink = document.getElementById('loginLink');
+    const signupNavLink = document.getElementById('signupNavLink');
+    const homeLink = document.getElementById('homeLink');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const getStartedBtn = document.getElementById('getStartedBtn');
+    const uploadSection = document.getElementById('uploadSection');
+    const userName = document.getElementById('userName');
+    const userAvatar = document.getElementById('userAvatar');
+
+    // Audio Detection Elements
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const hiddenFileInput = document.getElementById('hiddenFileInput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const filenameDisplay = document.getElementById('filename');
+    const loadingDiv = document.getElementById('loading');
+    const resultDiv = document.getElementById('result');
+    const uploadForm = document.getElementById('uploadForm');
+
+    // Initialize user data in localStorage if it doesn't exist
+    if (!localStorage.getItem('deepfakeUsers')) {
+        localStorage.setItem('deepfakeUsers', JSON.stringify([]));
+    }
+    
+    // Simple User Database (for demo)
+    let users = JSON.parse(localStorage.getItem('deepfakeUsers'));
+    let currentUser = null;
+
+    // Check if user is logged in
+    if (localStorage.getItem('deepfakeCurrentUser')) {
+        try {
+            currentUser = JSON.parse(localStorage.getItem('deepfakeCurrentUser'));
+            if (currentUser) {
+                showDashboard();
+            }
+        } catch (e) {
+            console.error("Error parsing user data:", e);
+            localStorage.removeItem('deepfakeCurrentUser');
+        }
+    }
+
+    // Event Listeners
+    signupLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginPage.classList.add('hidden');
+        signupPage.classList.remove('hidden');
+    });
+
+    loginLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        signupPage.classList.add('hidden');
+        loginPage.classList.remove('hidden');
+    });
+
+    signupNavLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginPage.classList.add('hidden');
+        signupPage.classList.remove('hidden');
+        dashboardPage.classList.add('hidden');
+    });
+
+    homeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentUser) {
+            showDashboard();
+        } else {
+            loginPage.classList.remove('hidden');
+            signupPage.classList.add('hidden');
+            dashboardPage.classList.add('hidden');
+        }
+    });
+
+    logoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        localStorage.removeItem('deepfakeCurrentUser');
+        currentUser = null;
+        loginPage.classList.remove('hidden');
+        dashboardPage.classList.add('hidden');
+        // Reset login form
+        loginForm.reset();
+    });
+
+    getStartedBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        uploadSection.classList.remove('hidden');
+    });
+
+    // Form Submissions
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+
+        if (!username || !password) {
+            alert('Please enter both username and password');
+            return;
+        }
+
+        const user = users.find(u => 
+            (u.email === username || u.name.toLowerCase() === username.toLowerCase()) && 
+            u.password === password
+        );
+        
+        if (user) {
+            currentUser = user;
+            localStorage.setItem('deepfakeCurrentUser', JSON.stringify(currentUser));
+            showDashboard();
+            loginForm.reset();
+        } else {
+            alert('Invalid username or password');
+        }
+    });
+
+    signupForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('signupName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+        const password = document.getElementById('signupPassword').value.trim();
+
+        if (!name || !email || !password) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        if (users.some(u => u.email === email)) {
+            alert('Email already registered');
+            return;
+        }
+
+        const newUser = { 
+            name, 
+            email, 
+            password 
+        };
+        
+        users.push(newUser);
+        localStorage.setItem('deepfakeUsers', JSON.stringify(users));
+        
+        currentUser = newUser;
+        localStorage.setItem('deepfakeCurrentUser', JSON.stringify(currentUser));
+        showDashboard();
+        signupForm.reset();
+    });
+
+    function showDashboard() {
+        loginPage.classList.add('hidden');
+        signupPage.classList.add('hidden');
+        dashboardPage.classList.remove('hidden');
+        uploadSection.classList.add('hidden');
+
+        // Update user info
+        if (currentUser) {
+            userName.textContent = currentUser.name;
+            userAvatar.textContent = currentUser.name.charAt(0).toUpperCase();
+        }
+    }
+
+    // Audio Detection Functionality
+    uploadArea.addEventListener('click', () => fileInput.click());
+    
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            handleFileSelection(e.target.files[0]);
+        }
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--primary)';
+        uploadArea.style.backgroundColor = 'rgba(37, 99, 235, 0.05)';
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = 'rgba(203, 213, 225, 0.7)';
+        uploadArea.style.backgroundColor = 'rgba(255, 255, 255, 0.85)';
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'rgba(203, 213, 225, 0.7)';
+        uploadArea.style.backgroundColor = 'rgba(255, 255, 255, 0.85)';
+        
+        if (e.dataTransfer.files.length) {
+            handleFileSelection(e.dataTransfer.files[0]);
+        }
+    });
+
+    function handleFileSelection(file) {
+        if (!file.name.endsWith('.wav')) {
+            alert('Please upload a .wav file');
+            return;
+        }
+        
+        filenameDisplay.textContent = `Selected: ${file.name}`;
+        analyzeBtn.disabled = false;
+        
+        // Sync with hidden form input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        hiddenFileInput.files = dataTransfer.files;
+    }
+
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!hiddenFileInput.files.length) {
+            alert('Please select a file first');
+            return;
+        }
+        
+        loadingDiv.style.display = 'block';
+        analyzeBtn.disabled = true;
+        resultDiv.style.opacity = '0';
+        
+        try {
+            const formData = new FormData(uploadForm);
+            // For demo purposes, we'll simulate an API response
+            setTimeout(() => {
+                // Simulated response
+                const randomPrediction = Math.random() > 0.5 ? 'Real' : 'Fake';
+                const randomConfidence = Math.random() * 0.5 + 0.5; // Between 0.5 and 1.0
+                
+                resultDiv.className = randomPrediction.toLowerCase();
+                resultDiv.innerHTML = `
+                    <i class="fas fa-${randomPrediction === 'Real' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                    <strong>Prediction:</strong> ${randomPrediction}<br>
+                    <strong>Confidence:</strong> ${(randomConfidence * 100).toFixed(2)}%
+                `;
+                resultDiv.style.opacity = '1';
+                loadingDiv.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }, 2000);
+        } catch (error) {
+            resultDiv.className = '';
+            resultDiv.innerHTML = `<i class="fas fa-times-circle"></i> Error: ${error.message}`;
+            resultDiv.style.opacity = '1';
+            loadingDiv.style.display = 'none';
+            analyzeBtn.disabled = false;
+        }
+    });
+
+    // Add animation to elements when they come into view
+    const animateOnScroll = () => {
+      const elements = document.querySelectorAll('.auth-container, .hero, .upload-area');
+      elements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 100) {
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        }
+      });
+    };
+
+    // Initialize animation styles
+    document.querySelectorAll('.auth-container, .hero, .upload-area').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'all 0.6s ease-out';
+    });
+
+    // Run once on load
+    setTimeout(animateOnScroll, 300);
+    
+    // And on scroll
+    window.addEventListener('scroll', animateOnScroll);
+  </script>
+</body>
+</html>
