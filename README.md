@@ -1,4 +1,4 @@
-#FoR Analyst – Deepfake Audio Detection Website
+# FoR Analyst – Deepfake Audio Detection Website
 
 FoR Analyst is an interactive web-based platform designed to detect and classify deepfake audio using artificial intelligence. The system provides a clean, modern, and user-friendly interface where users can register, log in, and upload audio files to verify their authenticity. The primary objective of this project is to allow individuals, organizations, and researchers to identify whether a voice recording is real or artificially generated using deepfake technologies.
 
@@ -9,5 +9,6 @@ Upon uploading an audio file, the platform simulates a backend prediction proces
 The UI is built with a focus on modern design aesthetics, using gradients, soft shadows, smooth animations, responsive layout, and a visually appealing dark-themed background overlay. The website also includes a structured footer section showing team member details, support links, and social media placeholders.
 
 Overall, FoR Analyst acts as a conceptual and functional prototype for deepfake audio detection, demonstrating how artificial intelligence can be integrated into a secure, accessible, and visually polished web environment to combat audio manipulation threats.
+
 
 
