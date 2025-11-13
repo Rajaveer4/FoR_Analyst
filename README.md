@@ -10,3 +10,4 @@ The UI is built with a focus on modern design aesthetics, using gradients, soft 
 
 Overall, FoR Analyst acts as a conceptual and functional prototype for deepfake audio detection, demonstrating how artificial intelligence can be integrated into a secure, accessible, and visually polished web environment to combat audio manipulation threats.
 
+
